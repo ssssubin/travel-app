@@ -1,13 +1,24 @@
 import { Injectable } from "@nestjs/common";
 import * as mysql from "mysql2/promise";
-import { MysqlService } from "./mysql.service";
 
 @Injectable()
 export class MysqlCreateTableService {
    private readonly pool: mysql.Pool;
 
-   constructor(private mysqlService: MysqlService) {
-      this.pool = this.mysqlService.getPool();
+   constructor() {
+      // db 연결 설정
+      this.pool = mysql.createPool({
+         host: "127.0.0.1",
+         port: 3306,
+         user: process.env.USER,
+         password: process.env.PASSWORD,
+         database: process.env.DATABASE,
+      });
+   }
+
+   // db 연결을 사용할 때 필요한 pool 객체만 반환하는 함수
+   getPool(): mysql.Pool {
+      return this.pool;
    }
 
    // 대륙 테이블 생성하는 함수

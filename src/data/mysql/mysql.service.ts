@@ -1,24 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import * as mysql from "mysql2/promise";
+import { MysqlCreateTableService } from "./mysql-create-table.service";
 
 @Injectable()
 export class MysqlService {
    private readonly pool: mysql.Pool;
 
-   constructor() {
-      // db 연결 설정
-      this.pool = mysql.createPool({
-         host: "127.0.0.1",
-         port: 3306,
-         user: process.env.USER,
-         password: process.env.PASSWORD,
-         database: process.env.DATABASE,
-      });
-   }
-
-   // db 연결을 사용할 때 필요한 pool 객체만 반환하는 함수
-   getPool(): mysql.Pool {
-      return this.pool;
+   constructor(private tableCreateService: MysqlCreateTableService) {
+      this.pool = this.tableCreateService.getPool();
    }
 
    // 키워드 이름으로 키워드 id 조회하는 함수
