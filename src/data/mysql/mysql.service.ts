@@ -16,6 +16,11 @@ export class MysqlService {
       });
    }
 
+   // db 연결을 사용할 때 필요한 pool 객체만 반환하는 함수
+   getPool(): mysql.Pool {
+      return this.pool;
+   }
+
    // 키워드 이름으로 키워드 id 조회하는 함수
    async findKeywordIdByName(keyword: string) {
       const sql = `SELECT id FROM keyword WHERE name = "${keyword}"`;
