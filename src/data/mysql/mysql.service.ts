@@ -3,8 +3,8 @@ import * as mysql from "mysql2/promise";
 
 @Injectable()
 export class MysqlService {
-   private pool: mysql.Pool;
-
+   private readonly pool: mysql.Pool;
+  
    constructor() {
       // db 연결 설정
       this.pool = mysql.createPool({
@@ -14,6 +14,11 @@ export class MysqlService {
          password: process.env.PASSWORD,
          database: process.env.DATABASE,
       });
+   }
+
+   // db 연결을 사용할 때 필요한 pool 객체만 반환하는 함수
+   getPool(): mysql.Pool {
+      return this.pool;
    }
 
    // 키워드 이름으로 키워드 id 조회하는 함수
