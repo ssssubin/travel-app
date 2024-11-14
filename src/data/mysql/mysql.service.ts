@@ -4,7 +4,7 @@ import * as mysql from "mysql2/promise";
 @Injectable()
 export class MysqlService {
    private readonly pool: mysql.Pool;
-
+  
    constructor() {
       // db 연결 설정
       this.pool = mysql.createPool({
