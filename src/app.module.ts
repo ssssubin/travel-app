@@ -4,6 +4,7 @@ import { AppService } from "./app.service";
 import { ConfigModule } from "@nestjs/config";
 import { MysqlCreateTableService } from "./data/mysql/mysql-create-table.service";
 import { DataModule } from "./data/data.module";
+import { RecommendationModule } from "./recommendation/recommendation.module";
 
 @Module({
    imports: [
@@ -12,6 +13,7 @@ import { DataModule } from "./data/data.module";
          isGlobal: true, // 전역 모듈로 선언
       }),
       DataModule,
+      RecommendationModule,
    ],
    controllers: [AppController],
    providers: [AppService, MysqlCreateTableService],
