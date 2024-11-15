@@ -44,4 +44,11 @@ export class MysqlService {
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
+
+   // 여행지 id로 이미지 조회하는 함수
+   async findImageByDestinationId(id: number) {
+      const sql = `SELECT image FROM destination_image WHERE destination_id = "${id}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
 }
