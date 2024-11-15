@@ -1,6 +1,7 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Post, Res } from "@nestjs/common";
 import { AccountService } from "./account.service";
-import { createUserDto } from "./dto/create-user.dto";
+import { createUserDto, signInUserDto } from "./dto/user.dto";
+import { Response } from "express";
 
 @Controller()
 export class AccountController {
@@ -9,5 +10,10 @@ export class AccountController {
    @Post("sign-up")
    async signUp(@Body() userData: createUserDto) {
       return await this.accountService.createUser(userData);
+   }
+
+   @Post("sign-in")
+   async signIn(@Res({ passthrough: true }) res: Response, @Body() userData: signInUserDto) {
+      return await this.accountService.signInUser(res, userData);
    }
 }

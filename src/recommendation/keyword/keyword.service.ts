@@ -44,13 +44,13 @@ export class KeywordService {
             // 여행지 id 사용해서 이름, 주소, 이미지, 도시 아이디 조회
             const foundDestination = await this.mysqlService.findDestinationById(id);
             return {
-               name: foundDestination[0].name,
-               address: foundDestination[0].address,
-               image: foundDestination[0].image,
-               cityId: foundDestination[0].city_id,
+               name: foundDestination[0].name, // 여행지 이름
+               address: foundDestination[0].address, // 여행지 주소
+               cityId: foundDestination[0].city_id, // 여행지 도시 ID
             };
          }),
       );
+      // 여행지 리스트 반환
       return destination;
    }
 
@@ -60,13 +60,15 @@ export class KeywordService {
          cityIdList.map(async (id) => {
             // 도시 아이디(city_id) 사용해서 국가, 도시 조회
             const foundRegion = await this.mysqlService.findRegionByCityId(id);
+            // string으로 반환("대한민국, 서울")
             return `${foundRegion[0].country}, ${foundRegion[0].city}`;
          }),
       );
+
       return region;
    }
 
-   // 여행지별 이미지 반환하는 함수
+   // 여행지별 이미지 리스트 반환하는 함수
    async imageList(sortedList: [number, string[]][]) {
       // 여행지 ID 리스트
       const destinationIdList = sortedList.map((value) => value[0]);
