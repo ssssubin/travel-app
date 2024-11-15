@@ -66,6 +66,30 @@ export class KeywordService {
       return region;
    }
 
+   // 여행지별 이미지 반환하는 함수
+   async imageList(sortedList: [number, string[]][]) {
+      // 여행지 ID 리스트
+      const destinationIdList = sortedList.map((value) => value[0]);
+      // 여행지별 이미지 담을 배열 생성
+      const imageList: string[][] = [];
+      await Promise.all(
+         destinationIdList.map(async (id) => {
+            // 여행지별 이미지 조회
+            const foundImage = await this.mysqlService.findImageByDestinationId(id);
+            // 이미지 담을 배열 생성
+            const list = [];
+            // 쿼리 실행 결과가 배열인 경우
+            if (Array.isArray(foundImage)) {
+               foundImage.map((img) => list.push(img));
+            }
+            imageList.push(list);
+         }),
+      );
+
+      // 여행지별 이미지 리스트 반환
+      return imageList;
+   }
+
    // 키워드 기반 여행지 추천 API
    async getKeyword(keyword: string) {
       // 유저가 입력한 키워드를 공백 기준으로 분리하여 배열로 만듦
@@ -80,6 +104,9 @@ export class KeywordService {
       // 여행지별 이름, 주소, 도시 ID를 담고 있는 리스트
       const destination = await this.destinationList(sorted);
 
+      // 여행지별 이미지 리스트
+      const imageList = await this.imageList(sorted);
+
       // 도시 ID 리스트
       const cityIdList = destination.map((value) => value.cityId);
 
@@ -93,7 +120,7 @@ export class KeywordService {
       const payload: {
          name: string;
          address: string;
-         image: string;
+         image: string[];
          keyword: string[];
          region: string;
       }[] = [];
@@ -103,7 +130,7 @@ export class KeywordService {
          payload.push({
             name: destination[i].name,
             address: destination[i].address,
-            image: destination[i].image,
+            image: imageList[i],
             keyword: keywords[i],
             region: region[i],
          });
