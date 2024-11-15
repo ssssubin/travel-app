@@ -5,6 +5,8 @@ import { ConfigModule } from "@nestjs/config";
 import { MysqlCreateTableService } from "./data/mysql/mysql-create-table.service";
 import { DataModule } from "./data/data.module";
 import { RecommendationModule } from "./recommendation/recommendation.module";
+import { AccountModule } from "./account/account.module";
+import { JwtModule } from "@nestjs/jwt";
 
 @Module({
    imports: [
@@ -14,6 +16,14 @@ import { RecommendationModule } from "./recommendation/recommendation.module";
       }),
       DataModule,
       RecommendationModule,
+      AccountModule,
+      JwtModule.registerAsync({
+         useFactory: async () => ({
+            secret: process.env.USER_SECRET_KEY,
+            signOptions: { expiresIn: "1h" },
+            global: true,
+         }),
+      }),
    ],
    controllers: [AppController],
    providers: [AppService, MysqlCreateTableService],

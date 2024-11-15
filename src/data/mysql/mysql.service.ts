@@ -51,4 +51,46 @@ export class MysqlService {
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
+
+   // 이메일 중복 체크하는 함수
+   async isDuplicateEmail(email: string) {
+      const sql = `SELECT COUNT(*) as count FROM users WHERE email = "${email}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 대륙 이름으로 존재 여부 확인하는 함수
+   async isContinent(name: string) {
+      const sql = `SELECT COUNT(*) as count FROM continent WHERE name = "${name}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 국가 이름으로 존재 여부 확인하는 함수
+   async isCountry(name: string) {
+      const sql = `SELECT COUNT(*) as count FROM countries WHERE name = "${name}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 도시 이름으로 도시 id 조회하는 함수
+   async findCityIdByName(name: string) {
+      const sql = `SELECT id FROM cities WHERE name = "${name}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 유저 등록하는 함수
+   async registerUser(email: string, name: string, password: string, cityId: number) {
+      const sql = `INSERT INTO users VALUES ("${email}", "${name}", "${password}", ${cityId})`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 이메일로 유저 정보 조회하는 함수
+   async findUserByEmail(email: string) {
+      const sql = `SELECT * FROM users WHERE email = "${email}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
 }
