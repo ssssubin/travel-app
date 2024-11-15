@@ -5,6 +5,7 @@ import { ConfigModule } from "@nestjs/config";
 import { MysqlCreateTableService } from "./data/mysql/mysql-create-table.service";
 import { DataModule } from "./data/data.module";
 import { RecommendationModule } from "./recommendation/recommendation.module";
+import { AccountModule } from "./account/account.module";
 
 @Module({
    imports: [
@@ -14,6 +15,7 @@ import { RecommendationModule } from "./recommendation/recommendation.module";
       }),
       DataModule,
       RecommendationModule,
+      AccountModule,
    ],
    controllers: [AppController],
    providers: [AppService, MysqlCreateTableService],
