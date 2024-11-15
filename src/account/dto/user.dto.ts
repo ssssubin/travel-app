@@ -1,3 +1,4 @@
+import { PickType } from "@nestjs/mapped-types";
 import { IsEmail, IsNotEmpty, IsString, Matches, MinLength } from "class-validator";
 
 export class createUserDto {
@@ -32,3 +33,5 @@ export class createUserDto {
    @IsString({ message: "도시는 문자열이어야 합니다." })
    readonly city: string;
 }
+
+export class signInUserDto extends PickType(createUserDto, ["email", "password"]) {}
