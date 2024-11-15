@@ -126,4 +126,14 @@ export class MysqlCreateTableService {
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
+
+   // 카테고리 테이블 생성하는 함수
+   async createCategoryTable() {
+      const sql = `CREATE TABLE IF NOT EXISTS categories(
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         name VARCHAR(20) NOT NULL
+      )`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
 }
