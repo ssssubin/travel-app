@@ -52,6 +52,13 @@ export class MysqlService {
       return rows;
    }
 
+   // 여행지 id로 키워드 id 조회하는 함수
+   async findKeywordIdByDestinationId(id: number) {
+      const sql = `SELECT keyword_id FROM destination_keyword WHERE destination_id = "${id}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
    // 이메일 중복 체크하는 함수
    async isDuplicateEmail(email: string) {
       const sql = `SELECT COUNT(*) as count FROM users WHERE email = "${email}"`;
@@ -76,6 +83,13 @@ export class MysqlService {
    // 도시 이름으로 도시 id 조회하는 함수
    async findCityIdByName(name: string) {
       const sql = `SELECT id FROM cities WHERE name = "${name}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 도시 id로 여행지 조회
+   async findDefinitionByCityId(id: number) {
+      const sql = `SELECT id, name, address FROM destination WHERE city_id = "${id}" `;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
