@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post } from "@nestjs/common";
 import { MainService } from "./main.service";
+import { mainUserDto } from "src/account/dto/user.dto";
 
 @Controller("main")
 export class MainController {
@@ -11,7 +12,7 @@ export class MainController {
    }
 
    @Post("region")
-   async getDestinationInUserRegion(@Body() data: { email: string }) {
+   async getDestinationInUserRegion(@Body() data: mainUserDto) {
       return await this.mainService.getDestinationInUserRegion(data.email);
    }
 }
