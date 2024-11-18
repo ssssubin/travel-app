@@ -128,4 +128,39 @@ export class MysqlService {
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
+
+   // 전체 대륙 이름 조회하는 함수
+   async findAllContinentName() {
+      const sql = `SELECT name FROM continent`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 대륙 이름으로 대륙 id 조회하는 함수
+   async findContinentIdByName(name: string) {
+      const sql = `SELECT id FROM continent WHERE name = "${name}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 대륙 id로 국가 이름 조회하는 함수
+   async findCountryNameByContinentId(id: number) {
+      const sql = `SELECT name FROM countries WHERE continent_id = "${id}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 국가 이름으로 국가 id 조회하는 함수
+   async findCountryIdByName(name: string) {
+      const sql = `SELECT id FROM countries WHERE name = "${name}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 국가 id로 도시 이름 조회하는 함수
+   async findCityNameByCountryId(id: number) {
+      const sql = `SELECT name FROM cities WHERE country_id = "${id}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
 }

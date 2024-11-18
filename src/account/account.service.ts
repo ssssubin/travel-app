@@ -93,4 +93,61 @@ export class AccountService {
          throw e;
       }
    }
+
+   // 회원가입 시 필요한 대륙 API
+   async getContinent() {
+      try {
+         // 전체 대륙 이름 조회
+         const continentName = await this.mysqlService.findAllContinentName();
+         if (Array.isArray(continentName)) {
+            // 전체 대륙 이름을 배열로 생성
+            const continentList = continentName.map((continent) => continent.name);
+            return { err: null, data: continentList };
+         }
+      } catch (e) {
+         throw e;
+      }
+   }
+
+   // 회원가입 시 필요한 국가 API
+   async getCountries(continent: string) {
+      try {
+         // 대륙 이름으로 대륙 id 조회
+         const continentId = await this.mysqlService.findContinentIdByName(continent);
+         if (continentId[0] === undefined) {
+            throw new NotFoundException("존재하지 않는 대륙입니다.");
+         }
+
+         // 대륙 id로 국가 이름 조회
+         const foundCountries = await this.mysqlService.findCountryNameByContinentId(continentId[0].id);
+         if (Array.isArray(foundCountries)) {
+            // 대륙에 속해있는 국가 이름을 배열로 생성
+            const countryList = foundCountries.map((country) => country.name);
+            return { err: null, data: countryList };
+         }
+      } catch (e) {
+         throw e;
+      }
+   }
+
+   // 회원가입 시 필요한 도시 API
+   async getCities(country: string) {
+      try {
+         // 국가 이름으로 국가 id 조회
+         const countryId = await this.mysqlService.findCountryIdByName(country);
+         if (countryId[0] === undefined) {
+            throw new NotFoundException("존재하지 않는 국가입니다.");
+         }
+
+         // 국가 id로 도시 이름 조회
+         const foundCities = await this.mysqlService.findCityNameByCountryId(countryId[0].id);
+         if (Array.isArray(foundCities)) {
+            // 국가에 속해있는 도시 이름을 배열로 생성
+            const cityList = foundCities.map((city) => city.name);
+            return { err: null, data: cityList };
+         }
+      } catch (e) {
+         throw e;
+      }
+   }
 }

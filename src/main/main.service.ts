@@ -76,6 +76,7 @@ export class MainService {
 
    // 도시 id로 조회한 여행지 리스트 반환하는 함수
    async destinationList(cityId: number) {
+      // 도시 id로 여행지 id, 이름, 주소 조회
       const foundDestination = await this.mysqlService.findDestinationByCityId(cityId);
       if (Array.isArray(foundDestination)) {
          const destinationList = foundDestination.map((destination) => {
@@ -87,12 +88,14 @@ export class MainService {
 
    // 여행지별 대표 이미지 반환하는 함수
    async mainImageByDestination(destinationIdList: number[]) {
+      // 여행지별 이미지 리스트
       const imageList = await Promise.all(
          destinationIdList.map(async (id) => {
             return await this.mysqlService.findImageByDestinationId(id);
          }),
       );
-      const mainImage = imageList.map((image) => image[0].image);
+      // 여행지별 대표 이미지 담을 리스트 생성
+      const mainImage: string[] = imageList.map((image) => image[0].image);
       return mainImage;
    }
 
@@ -106,7 +109,7 @@ export class MainService {
       );
 
       // 평점 값만 담는 배열 생성
-      const rating = ratingList.map((item) => item[0].star_point_average);
+      const rating: number[] = ratingList.map((item) => item[0].star_point_average);
 
       // 여행지별 평점 반환
       return rating;
