@@ -7,6 +7,7 @@ import { DataModule } from "./data/data.module";
 import { RecommendationModule } from "./recommendation/recommendation.module";
 import { AccountModule } from "./account/account.module";
 import { JwtModule } from "@nestjs/jwt";
+import { MainModule } from "./main/main.module";
 
 @Module({
    imports: [
@@ -24,6 +25,7 @@ import { JwtModule } from "@nestjs/jwt";
             global: true,
          }),
       }),
+      MainModule,
    ],
    controllers: [AppController],
    providers: [AppService, MysqlCreateTableService],
