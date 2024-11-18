@@ -23,12 +23,12 @@ export class AccountController {
    }
 
    @Post("sign-up/country")
-   async getCountries(@Body() data: continentDto) {
-      return await this.accountService.getCountries(data.continent);
+   async getCountries(@Res({ passthrough: true }) res: Response, @Body() data: continentDto) {
+      return await this.accountService.getCountries(res, data.continent);
    }
 
    @Post("sign-up/city")
-   async getCities(@Body() data: countryDto) {
-      return await this.accountService.getCities(data.country);
+   async getCities(@Res({ passthrough: true }) res: Response, @Body() data: countryDto) {
+      return await this.accountService.getCities(res, data.country);
    }
 }
