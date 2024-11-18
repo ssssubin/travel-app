@@ -35,3 +35,6 @@ export class createUserDto {
 }
 
 export class signInUserDto extends PickType(createUserDto, ["email", "password"]) {}
+export class mainUserDto extends PickType(createUserDto, ["email"]) {}
+export class continentDto extends PickType(createUserDto, ["continent"]) {}
+export class countryDto extends PickType(createUserDto, ["country"]) {}
