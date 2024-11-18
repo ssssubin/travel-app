@@ -1,6 +1,6 @@
-import { Body, Controller, Post, Res } from "@nestjs/common";
+import { Body, Controller, Get, Post, Res } from "@nestjs/common";
 import { AccountService } from "./account.service";
-import { createUserDto, signInUserDto } from "./dto/user.dto";
+import { continentDto, countryDto, createUserDto, signInUserDto } from "./dto/user.dto";
 import { Response } from "express";
 
 @Controller()
@@ -15,5 +15,20 @@ export class AccountController {
    @Post("sign-in")
    async signIn(@Res({ passthrough: true }) res: Response, @Body() userData: signInUserDto) {
       return await this.accountService.signInUser(res, userData);
+   }
+
+   @Get("sign-up/continent")
+   async getContinent() {
+      return await this.accountService.getContinent();
+   }
+
+   @Post("sign-up/country")
+   async getCountries(@Body() data: continentDto) {
+      return await this.accountService.getCountries(data.continent);
+   }
+
+   @Post("sign-up/city")
+   async getCities(@Body() data: countryDto) {
+      return await this.accountService.getCities(data.country);
    }
 }
