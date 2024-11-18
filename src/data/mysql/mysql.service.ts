@@ -26,7 +26,7 @@ export class MysqlService {
 
    // 여행지 id로 여행지 조회하는 함수
    async findDestinationById(id: number) {
-      const sql = `SELECT name, address, image, city_id FROM destination WHERE id = "${id}"`;
+      const sql = `SELECT name, address, city_id FROM destination WHERE id = "${id}"`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
@@ -104,6 +104,13 @@ export class MysqlService {
    // 이메일로 유저 정보 조회하는 함수
    async findUserByEmail(email: string) {
       const sql = `SELECT * FROM users WHERE email = "${email}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // db에 저장된 여행지 개수 조회하는 함수
+   async findNumberOfDestinations() {
+      const sql = `SELECT COUNT(*) as count FROM destination`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
