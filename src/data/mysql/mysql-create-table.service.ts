@@ -136,4 +136,17 @@ export class MysqlCreateTableService {
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
+
+   // 여행지 정보 테이블 생성하는 함수
+   async createDestinationInformationTable() {
+      const sql = `CREATE TABLE IF NOT EXISTS destination_info(
+         id INT NOT NULL PRIMARY KEY,
+         summary VARCHAR(50) DEFAULT NULL,
+         description VARCHAR(2000) DEFAULT NULL,
+         star_point_average DECIMAL(3,2) CHECK (star_point_average >= 0 AND star_point_average <= 5) DEFAULT 0,
+         FOREIGN KEY (id) REFERENCES destination (id) ON DELETE CASCADE ON UPDATE CASCADE 
+      )`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
 }

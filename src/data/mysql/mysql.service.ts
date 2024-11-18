@@ -88,7 +88,7 @@ export class MysqlService {
    }
 
    // 도시 id로 여행지 조회
-   async findDefinitionByCityId(id: number) {
+   async findDestinationByCityId(id: number) {
       const sql = `SELECT id, name, address FROM destination WHERE city_id = "${id}" `;
       const [rows] = await this.pool.execute(sql);
       return rows;
@@ -111,6 +111,20 @@ export class MysqlService {
    // db에 저장된 여행지 개수 조회하는 함수
    async findNumberOfDestinations() {
       const sql = `SELECT COUNT(*) as count FROM destination`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 도시 id로 도시 이름 조회하는 함수
+   async findCityNameById(id: number) {
+      const sql = `SELECT name FROM cities WHERE id = "${id}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 여행지 id로 여행지 별점 조회하는 함수
+   async findDestinationInformationById(id: number) {
+      const sql = `SELECT star_point_average FROM destination_info WHERE id = "${id}"`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }

@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule, OnModuleInit } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { ConfigModule } from "@nestjs/config";
@@ -8,6 +8,7 @@ import { RecommendationModule } from "./recommendation/recommendation.module";
 import { AccountModule } from "./account/account.module";
 import { JwtModule } from "@nestjs/jwt";
 import { MainModule } from "./main/main.module";
+import { AuthenticationMiddleware } from "./middleware/authentication.middleware";
 
 @Module({
    imports: [
@@ -30,7 +31,7 @@ import { MainModule } from "./main/main.module";
    controllers: [AppController],
    providers: [AppService, MysqlCreateTableService],
 })
-export class AppModule implements OnModuleInit {
+export class AppModule implements OnModuleInit, NestModule {
    constructor(private createTableService: MysqlCreateTableService) {}
 
    // 서버 시작될 때 테이블 생성
@@ -46,10 +47,16 @@ export class AppModule implements OnModuleInit {
             this.createTableService.createUserKeywordTable(),
             this.createTableService.createDestinationKeywordTable(),
             this.createTableService.createDestiantionImageTable(),
+            this.createTableService.createDestinationInformationTable(),
          ]);
       } catch (e) {
          console.error(e);
          throw e;
       }
+   }
+
+   // 미들웨어 적용
+   configure(consumer: MiddlewareConsumer) {
+      consumer.apply(AuthenticationMiddleware).forRoutes("main", "keyword", "region");
    }
 }

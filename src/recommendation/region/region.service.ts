@@ -10,7 +10,7 @@ export class RegionService {
       // 도시아이디 조회
       const foundCityId = await this.mysqlService.findCityIdByName(city);
       // 여행지 조회
-      const foundDestination = await this.mysqlService.findDefinitionByCityId(foundCityId[0].id);
+      const foundDestination = await this.mysqlService.findDestinationByCityId(foundCityId[0].id);
 
       // 사용자가 선택한 지역에 속해있는 여행지 리스트 선언
       const destination: { id: number; name: string; address: string }[] = [];
