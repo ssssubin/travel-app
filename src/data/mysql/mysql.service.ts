@@ -163,4 +163,11 @@ export class MysqlService {
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
+
+   // 유저 이메일로 예약 정보 조회하는 함수
+   async findReservationByUserEmail(email: string) {
+      const sql = `SELECT destination_id, date_format(date, "%Y년 %m월 %d일 %H:%i") as format_date, SUBSTR(_UTF8'일월화수목금토', DAYOFWEEK(date), 1) AS day FROM reservation WHERE id = "${email}" ORDER BY reservation_time DESC`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
 }

@@ -149,4 +149,18 @@ export class MysqlCreateTableService {
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
+
+   // 예약 테이블 생성하는 함수
+   async createReservationTable() {
+      const sql = `CREATE TABLE IF NOT EXISTS reservation(
+         id VARCHAR(150) NOT NULL,
+         destination_id INT NOT NULL,
+         date DATETIME NOT NULL,
+         reservation_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+         FOREIGN KEY (id) REFERENCES users (email) ON DELETE CASCADE ON UPDATE CASCADE,
+         FOREIGN KEY (destination_id) REFERENCES destination (id) ON DELETE CASCADE
+      )`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
 }
