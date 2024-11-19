@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { Response } from "express";
 import { MysqlService } from "src/data/mysql/mysql.service";
 
 @Injectable()
@@ -35,13 +36,6 @@ export class MainService {
       return keyword;
    }
 
-   // 조회한 여행지의 도시 id로 지역 반환하는 함수
-   async destinationRegion(cityId: number) {
-      // 도시 id로 국가 이름, 도시 이름 조회
-      const foundRegion = await this.mysqlService.findRegionByCityId(cityId);
-      return `${foundRegion[0].country}, ${foundRegion[0].city}`;
-   }
-
    // 프로모션 API
    async getPromotion() {
       try {
@@ -55,8 +49,10 @@ export class MainService {
          const keywordList = await this.destinationKeywordList(randomDestinationId);
          // 랜덤으로 생성된 여행지 id로 이미지 조회
          const foundImage = await this.mysqlService.findImageByDestinationId(randomDestinationId);
-         // 조회한 여행지의 도시 id로 지역 조회
-         const region = await this.destinationRegion(foundDestination[0].city_id);
+         // 도시 id로 국가 이름, 도시 이름 조회
+         const foundRegion = await this.mysqlService.findRegionByCityId(foundDestination[0].city_id);
+         // 조회한 지역을 string으로 변환
+         const region = `${foundRegion[0].country}, ${foundRegion[0].city}`;
 
          return {
             err: null,
@@ -116,7 +112,7 @@ export class MainService {
    }
 
    // 유저가 속한 지역의 여행지 조회 API
-   async getDestinationInUserRegion(email: string) {
+   async getDestinationInUserRegion(res: Response, email: string) {
       try {
          // 유저 조회
          const foundUser = await this.mysqlService.findUserByEmail(email);
@@ -167,10 +163,79 @@ export class MainService {
 
          // 평점 높은 순으로 정렬
          const resData = payload.sort((a, b) => b.rating - a.rating);
-
+         res.statusCode = 200;
          return { err: null, data: { region: city[0].name, payload: resData } };
       } catch (e) {
          throw e;
       }
+   }
+
+   // 유저가 예약한 여행지 리스트 & 예약 시간 리스트 반환하는 함수
+   async resevationInformation(email: string) {
+      // 유저가 예약한 정보(최근에 주문한 순으로 반환)
+      const foundReservation = await this.mysqlService.findReservationByUserEmail(email);
+      if (Array.isArray(foundReservation)) {
+         // 유저가 예약한 여행지 id 리스트
+         const destinationIdList: number[] = foundReservation.map((reservation) => reservation.destination_id);
+         // 유저가 예약한 시간 리스트
+         const reservationDateList: string[] = foundReservation.map((reservation) => {
+            const date = reservation.format_date.split(" ");
+            const day = reservation.day;
+
+            return `${date[0]} ${date[1]} ${date[2]}(${day}) ${date[3]}`;
+         });
+         return { destinationIdList, reservationDateList };
+      }
+   }
+
+   // 예약한 여행지 조회 API
+   async getReservation(res: Response, email: string) {
+      // 유저 존재 여부 확인
+      const foundUser = await this.mysqlService.isDuplicateEmail(email);
+      if (foundUser[0].count === 0) {
+         throw new NotFoundException("존재하지 않는 유저입니다.");
+      }
+      // 유저가 예약한 여행지 id 리스트 & 예약 시간 리스트
+      const { destinationIdList, reservationDateList } = await this.resevationInformation(email);
+
+      // 예약한 정보가 없으면 빈 배열 반환
+      if (destinationIdList.length === 0) {
+         res.statusCode = 200;
+         return { err: null, data: [] };
+      }
+
+      // 여행지 리스트(이름, 주소)
+      const destinationList = await Promise.all(
+         destinationIdList.map(async (id) => {
+            const foundDestination = await this.mysqlService.findDestinationById(id);
+            return { name: foundDestination[0].name, address: foundDestination[0].address };
+         }),
+      );
+
+      // 여행지별 키워드 리스트
+      const keywordList = await Promise.all(
+         destinationIdList.map(async (id) => {
+            return await this.destinationKeywordList(id);
+         }),
+      );
+
+      // 여행지별 대표 이미지
+      const mainImage = await this.mainImageByDestination(destinationIdList);
+
+      // response 데이터 배열(여행지 이미지, 이름, 주소, 예약 시간, 연관 키워드)
+      const payload: { image: string; name: string; address: string; reservationDate: any; keyword: string[] }[] = [];
+
+      // 여행지 id 리스트 길이만큼 반복하여 데이터 가공
+      for (let i = 0; i < destinationIdList.length; i++) {
+         payload.push({
+            image: mainImage[i],
+            name: destinationList[i].name,
+            address: destinationList[i].address,
+            reservationDate: reservationDateList[i],
+            keyword: keywordList[i],
+         });
+      }
+      res.statusCode = 200;
+      return { err: null, data: payload };
    }
 }
