@@ -7,7 +7,7 @@ export class KeywordController {
 
    // 키워드 기반 여행지 추천 API
    @Get()
-   async getKeywordRecommendation(@Query("keyword") keyword: string) {
-      return await this.keywordService.getKeyword(keyword);
+   async getKeywordRecommendation(@Query("keyword") keyword: string, @Query("page") page: number) {
+      return await this.keywordService.getKeyword(keyword, page);
    }
 }
