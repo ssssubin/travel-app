@@ -152,4 +152,14 @@ export class AccountService {
          throw e;
       }
    }
+
+   // 로그아웃 API
+   async signOut(res: Response) {
+      try {
+         res.status(200).clearCookie("_uu");
+         return { err: null, data: "성공적으로 로그아웃 되었습니다." };
+      } catch (e) {
+         throw e;
+      }
+   }
 }

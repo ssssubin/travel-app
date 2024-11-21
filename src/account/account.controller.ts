@@ -31,4 +31,9 @@ export class AccountController {
    async getCities(@Res({ passthrough: true }) res: Response, @Body() data: countryDto) {
       return await this.accountService.getCities(res, data.country);
    }
+
+   @Post("sign-out")
+   async signOut(@Res({ passthrough: true }) res: Response) {
+      return await this.accountService.signOut(res);
+   }
 }
