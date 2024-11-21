@@ -93,15 +93,18 @@ export class KeywordService {
    }
 
    // 키워드 기반 여행지 추천 API
-   async getKeyword(keyword: string) {
+   async getKeyword(keyword: string, page: number) {
+      const reqPerPage = 10;
       // 유저가 입력한 키워드를 공백 기준으로 분리하여 배열로 만듦
       const keywordList = keyword.split(" ");
 
       // 여행지별 키워드 리스트
       const keywordArr = await this.destinationKeyword(keywordList);
 
-      // 연관 키워드가 많은 순서대로 정렬된 리스트
-      const sorted = keywordArr.sort((a, b) => b[1].length - a[1].length);
+      // 연관 키워드가 많은 순서대로 정렬된 리스트(reqPerPage만큼 가져옴)
+      const sorted = keywordArr
+         .sort((a, b) => b[1].length - a[1].length)
+         .slice(reqPerPage * (page - 1), reqPerPage * page);
 
       // 여행지별 이름, 주소, 도시 ID를 담고 있는 리스트
       const destination = await this.destinationList(sorted);

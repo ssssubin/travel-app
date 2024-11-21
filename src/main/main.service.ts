@@ -72,8 +72,9 @@ export class MainService {
 
    // 도시 id로 조회한 여행지 리스트 반환하는 함수
    async destinationList(cityId: number) {
+      const reqPerPage = 10;
       // 도시 id로 여행지 id, 이름, 주소 조회
-      const foundDestination = await this.mysqlService.findDestinationByCityId(cityId);
+      const foundDestination = await this.mysqlService.findDestinationByCityId(cityId, 1, reqPerPage);
       if (Array.isArray(foundDestination)) {
          const destinationList = foundDestination.map((destination) => {
             return { id: destination.id, name: destination.name, address: destination.address };

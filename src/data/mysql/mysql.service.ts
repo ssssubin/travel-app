@@ -88,8 +88,8 @@ export class MysqlService {
    }
 
    // 도시 id로 여행지 조회
-   async findDestinationByCityId(id: number) {
-      const sql = `SELECT id, name, address FROM destination WHERE city_id = "${id}" `;
+   async findDestinationByCityId(id: number, page: number, reqPerPage: number) {
+      const sql = `SELECT id, name, address FROM destination WHERE city_id = "${id}" limit ${reqPerPage * (page - 1)}, ${reqPerPage} `;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }

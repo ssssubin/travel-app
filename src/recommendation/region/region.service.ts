@@ -6,11 +6,11 @@ export class RegionService {
    constructor(private mysqlService: MysqlService) {}
 
    // 사용자가 선택한 지역에 속해있는 여행지 리스트 반환하는 함수
-   async getDestination(city: string) {
+   async getDestination(city: string, page: number, reqPerPage: number) {
       // 도시아이디 조회
       const foundCityId = await this.mysqlService.findCityIdByName(city);
       // 여행지 조회
-      const foundDestination = await this.mysqlService.findDestinationByCityId(foundCityId[0].id);
+      const foundDestination = await this.mysqlService.findDestinationByCityId(foundCityId[0].id, page, reqPerPage);
 
       // 사용자가 선택한 지역에 속해있는 여행지 리스트 선언
       const destination: { id: number; name: string; address: string }[] = [];
@@ -101,12 +101,13 @@ export class RegionService {
    }
 
    // 지역 기반 여행지 추천 API
-   async getRegion(region: string) {
+   async getRegion(region: string, page: number) {
+      const reqPerPage = 10;
       // 유저가 선택한 지역을 공백 기준으로 분리하여 배열로 만듦
       const regionList = region.split(" ");
 
-      // 사용자가 선택한 지역에 속해있는 여행지 리스트
-      const destinationList = await this.getDestination(regionList[regionList.length - 1]);
+      // 사용자가 선택한 지역에 속해있는 여행지 리스트(reqPerPage만큼 가져옴)
+      const destinationList = await this.getDestination(regionList[regionList.length - 1], page, reqPerPage);
 
       // 여행지 아이디 리스트
       const destinationIdList = destinationList.map((destination) => destination.id);
