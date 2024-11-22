@@ -1,9 +1,11 @@
-import { Body, Controller, Get, Post, Res } from "@nestjs/common";
+import { Body, Controller, Get, Post, Req, Res, UseGuards, UseInterceptors } from "@nestjs/common";
 import { AccountService } from "./account.service";
 import { continentDto, countryDto, createUserDto, signInUserDto } from "./dto/user.dto";
-import { Response } from "express";
+import { Request, Response } from "express";
+import { AuthGuard } from "@nestjs/passport";
 
 @Controller()
+@UseInterceptors()
 export class AccountController {
    constructor(private accountService: AccountService) {}
 
@@ -35,5 +37,15 @@ export class AccountController {
    @Post("sign-out")
    async signOut(@Res({ passthrough: true }) res: Response) {
       return await this.accountService.signOut(res);
+   }
+
+   @Get("auth/sign-in/google")
+   @UseGuards(AuthGuard("google"))
+   async googleSignIn(@Req() req: Request) {}
+
+   @Get("auth/sign-in/google/callback")
+   @UseGuards(AuthGuard("google"))
+   googleSignInCallback(@Res({ passthrough: true }) res: Response, @Req() req) {
+      return this.accountService.googleSignIn(res, req);
    }
 }
