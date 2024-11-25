@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { MysqlService } from "src/data/mysql/mysql.service";
-import { createUserDto, signInUserDto } from "./dto/user.dto";
+import { createUserDto, signInUserDto } from "../dto/user.dto";
 import * as bcrypt from "bcrypt";
 import { Response } from "express";
 import { JwtService } from "@nestjs/jwt";
@@ -169,11 +169,11 @@ export class AccountService {
          // 구글 이메일
          const { email } = req.user;
          // 유저 존재 여부 확인
-         const findUser = await this.mysqlService.findUserByEmail(email);
+         const findUser = await this.mysqlService.isDuplicateEmail(email);
 
          // 구글 로그인으로 로그인하려는 이메일이 db에 존재하지 않는 경우
          // 회원가입 페이지로
-         if (findUser[0] === undefined) {
+         if (findUser[0].count === 0) {
             res.statusCode = 301;
             return { err: null, data: { email, message: "회원가입 페이지로 이동합니다." } };
          }
@@ -193,10 +193,10 @@ export class AccountService {
          // 네이버 이메일
          const { email } = req.user;
          // 유저 존재 여부 확인
-         const foundEmail = await this.mysqlService.findUserByEmail(email);
+         const foundEmail = await this.mysqlService.isDuplicateEmail(email);
          // 네이버 로그인으로 로그인하려는 이메일이 db에 존재하지 않는 경우
          // 회원가입 페이지로
-         if (foundEmail[0] === undefined) {
+         if (foundEmail[0].count === 0) {
             res.statusCode = 301;
             return { err: null, data: { email, message: "회원가입 페이지로 이동합니다." } };
          }
