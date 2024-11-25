@@ -3,12 +3,12 @@ import { AccountController } from "./account.controller";
 import { AccountService } from "./account.service";
 import { DataModule } from "src/data/data.module";
 import { JwtModule } from "@nestjs/jwt";
-import { PassportModule } from "@nestjs/passport";
 import { GoogleStrategy } from "./google.strategies";
+import { NaverStrategy } from "./naver.strategies";
 
 @Module({
-   imports: [DataModule, JwtModule, PassportModule.register({ defaultStrategy: "google" })],
+   imports: [DataModule, JwtModule],
    controllers: [AccountController],
-   providers: [AccountService, GoogleStrategy],
+   providers: [AccountService, GoogleStrategy, NaverStrategy],
 })
 export class AccountModule {}
