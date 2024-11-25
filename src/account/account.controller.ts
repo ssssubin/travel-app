@@ -41,11 +41,21 @@ export class AccountController {
 
    @Get("auth/sign-in/google")
    @UseGuards(AuthGuard("google"))
-   async googleSignIn(@Req() req: Request) {}
+   async googleSignIn() {}
 
    @Get("auth/sign-in/google/callback")
    @UseGuards(AuthGuard("google"))
    googleSignInCallback(@Res({ passthrough: true }) res: Response, @Req() req) {
       return this.accountService.googleSignIn(res, req);
+   }
+
+   @Get("auth/sign-in/naver")
+   @UseGuards(AuthGuard("naver"))
+   naverSignIn() {}
+
+   @Get("auth/sign-in/naver/callback")
+   @UseGuards(AuthGuard("naver"))
+   naverSignInCallback(@Res({ passthrough: true }) res: Response, @Req() req: Request) {
+      return this.accountService.naverSignIn(res, req);
    }
 }
