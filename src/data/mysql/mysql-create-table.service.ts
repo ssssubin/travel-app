@@ -157,6 +157,7 @@ export class MysqlCreateTableService {
          destination_id INT NOT NULL,
          date DATETIME NOT NULL,
          reservation_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+         status TINYINT(1) DEFAULT 0,
          FOREIGN KEY (id) REFERENCES users (email) ON DELETE CASCADE ON UPDATE CASCADE,
          FOREIGN KEY (destination_id) REFERENCES destination (id) ON DELETE CASCADE
       )`;
