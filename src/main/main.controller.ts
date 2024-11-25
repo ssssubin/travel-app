@@ -1,6 +1,5 @@
-import { Body, Controller, Get, Post, Res } from "@nestjs/common";
+import { Controller, Get, Res } from "@nestjs/common";
 import { MainService } from "./main.service";
-import { mainUserDto } from "src/account/dto/user.dto";
 import { Response } from "express";
 
 @Controller("main")
@@ -9,16 +8,19 @@ export class MainController {
 
    @Get("promotion")
    async getPromotion() {
-      return await this.mainService.getPromotion();
+      const data = await this.mainService.getPromotion();
+      return { err: null, data };
    }
 
-   @Post("region")
-   async getDestinationInUserRegion(@Res({ passthrough: true }) res: Response, @Body() data: mainUserDto) {
-      return await this.mainService.getDestinationInUserRegion(res, data.email);
+   @Get("region")
+   async getDestinationInUserRegion(@Res({ passthrough: true }) res: Response) {
+      const { region, payload } = await this.mainService.getDestinationInUserRegion(res);
+      return { err: null, data: { region, payload } };
    }
 
-   @Post("reservation")
-   async getReservationInUserId(@Res({ passthrough: true }) res: Response, @Body() data: mainUserDto) {
-      return await this.mainService.getReservation(res, data.email);
+   @Get("reservation")
+   async getReservationInUserId(@Res({ passthrough: true }) res: Response) {
+      const payload = await this.mainService.getReservation(res);
+      return { err: null, data: payload };
    }
 }
