@@ -7,5 +7,6 @@ import { DataModule } from "src/data/data.module";
    imports: [DataModule],
    controllers: [MainController],
    providers: [MainService],
+   exports: [MainService],
 })
 export class MainModule {}
