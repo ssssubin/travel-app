@@ -142,7 +142,7 @@ export class MysqlCreateTableService {
       const sql = `CREATE TABLE IF NOT EXISTS destination_info(
          id INT NOT NULL PRIMARY KEY,
          summary VARCHAR(50) DEFAULT NULL,
-         description VARCHAR(2000) DEFAULT NULL,
+         description VARCHAR(1000) DEFAULT NULL,
          star_point_average DECIMAL(3,2) CHECK (star_point_average >= 0 AND star_point_average <= 5) DEFAULT 0,
          FOREIGN KEY (id) REFERENCES destination (id) ON DELETE CASCADE ON UPDATE CASCADE 
       )`;
@@ -159,6 +159,19 @@ export class MysqlCreateTableService {
          reservation_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
          status TINYINT(1) DEFAULT 0,
          FOREIGN KEY (id) REFERENCES users (email) ON DELETE CASCADE ON UPDATE CASCADE,
+         FOREIGN KEY (destination_id) REFERENCES destination (id) ON DELETE CASCADE
+      )`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 리뷰 테이블 생성하는 함수
+   async createReviewTable() {
+      const sql = `CREATE TABLE IF NOT EXISTS review(
+         user_email VARCHAR(150) NOT NULL,
+         destination_id INT NOT NULL,
+         content VARCHAR(300),
+         FOREIGN KEY (user_email) REFERENCES users (email) ON DELETE CASCADE ON UPDATE CASCADE,
          FOREIGN KEY (destination_id) REFERENCES destination (id) ON DELETE CASCADE
       )`;
       const [rows] = await this.pool.execute(sql);
