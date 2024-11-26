@@ -54,17 +54,16 @@ export class MainService {
          // 조회한 지역을 string으로 변환
          const region = `${foundRegion[0].country}, ${foundRegion[0].city}`;
 
-         return {
-            err: null,
-            data: {
-               image: foundImage[0].image,
-               name: foundDestination[0].name,
-               address: foundDestination[0].address,
-               keyword: keywordList,
-               region,
-               promotion: true,
-            },
+         const data = {
+            image: foundImage[0].image,
+            name: foundDestination[0].name,
+            address: foundDestination[0].address,
+            keyword: keywordList,
+            region,
+            promotion: true,
          };
+
+         return data;
       } catch (e) {
          throw e;
       }
@@ -113,8 +112,9 @@ export class MainService {
    }
 
    // 유저가 속한 지역의 여행지 조회 API
-   async getDestinationInUserRegion(res: Response, email: string) {
+   async getDestinationInUserRegion(res: Response) {
       try {
+         const { email } = res.locals.user;
          // 유저 조회
          const foundUser = await this.mysqlService.findUserByEmail(email);
          if (foundUser[0] === undefined) {
@@ -164,8 +164,8 @@ export class MainService {
 
          // 평점 높은 순으로 정렬
          const resData = payload.sort((a, b) => b.rating - a.rating);
-         res.statusCode = 200;
-         return { err: null, data: { region: city[0].name, payload: resData } };
+
+         return { region: city[0].name, payload: resData };
       } catch (e) {
          throw e;
       }
@@ -190,8 +190,9 @@ export class MainService {
    }
 
    // 예약한 여행지 조회 API
-   async getReservation(res: Response, email: string) {
+   async getReservation(res: Response) {
       try {
+         const { email } = res.locals.user;
          // 유저 존재 여부 확인
          const foundUser = await this.mysqlService.isDuplicateEmail(email);
          if (foundUser[0].count === 0) {
@@ -202,8 +203,7 @@ export class MainService {
 
          // 예약한 정보가 없으면 빈 배열 반환
          if (destinationIdList.length === 0) {
-            res.statusCode = 200;
-            return { err: null, data: [] };
+            return [];
          }
 
          // 여행지 리스트(이름, 주소)
@@ -238,8 +238,7 @@ export class MainService {
                keyword: keywordList[i],
             });
          }
-         res.statusCode = 200;
-         return { err: null, data: payload };
+         return payload;
       } catch (e) {
          throw e;
       }
