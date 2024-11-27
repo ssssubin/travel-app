@@ -17,11 +17,6 @@ export class MyPageService {
          const foundReservation = await this.mainService.getReservation(res);
          // 마이페이지 조회하려는 유저 이메일
          const { email } = res.locals.user;
-         // 유저 정보 조회
-         const foundUser = await this.mysqlService.findUserByEmail(email);
-
-         // 유저 이메일, 이름 정보
-         const user = { email, name: foundUser[0].name };
 
          // 유저가 방문한 여행지 리스트
          const foundVisitedDestination = await this.mysqlService.findVisitedDestinationByUserEmail(email);
@@ -55,7 +50,7 @@ export class MyPageService {
                review: foundVisitedDestination[i].content,
             });
          }
-         return { err: null, data: { user, review: payload, reservation: foundReservation } };
+         return { err: null, data: { review: payload, reservation: foundReservation } };
       } catch (e) {
          throw e;
       }
@@ -69,7 +64,7 @@ export class MyPageService {
          const keywordList: string[] = await Promise.all(
             foundKeywordId.map(async (id) => {
                const foundKeyword = await this.mysqlService.findKeywordNameById(id.keyword_id);
-               return foundKeyword[0].name;
+               return id.keyword_id === null ? null : foundKeyword[0].name;
             }),
          );
          return keywordList;
@@ -113,10 +108,15 @@ export class MyPageService {
       return {
          err: null,
          data: {
+            user: {
+               email,
+               name: foundUser[0].name,
+               image: foundUser[0].image,
+               continent: region[0],
+               country: region[1],
+               city: region[2],
+            },
             keyword: keywordList,
-            continent: region[0],
-            country: region[1],
-            city: region[2],
          },
       };
    }
