@@ -122,7 +122,7 @@ export class MainService {
          }
 
          // 유저가 속해 있는 도시
-         const city = await this.mysqlService.findCityNameById(foundUser[0].city_id);
+         const city = await this.mysqlService.findCityById(foundUser[0].city_id);
 
          // 여행지 리스트
          const destinationList = await this.destinationList(foundUser[0].city_id);

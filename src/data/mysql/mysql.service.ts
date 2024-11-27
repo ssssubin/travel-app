@@ -115,9 +115,9 @@ export class MysqlService {
       return rows;
    }
 
-   // 도시 id로 도시 이름 조회하는 함수
-   async findCityNameById(id: number) {
-      const sql = `SELECT name FROM cities WHERE id = "${id}"`;
+   // 도시 id로 도시 이름, 국가 id 조회하는 함수
+   async findCityById(id: number) {
+      const sql = `SELECT name, country_id FROM cities WHERE id = "${id}"`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
@@ -173,7 +173,21 @@ export class MysqlService {
 
    // 유저 이메일로 방문한 여행지 조회하는 함수
    async findVisitedDestinationByUserEmail(email: string) {
-      const sql = `select res.id, res.destination_id, date_format(res.date, "%Y년 %m월 %d일 %H:%i") as format_date, SUBSTR(_UTF8'일월화수목금토', DAYOFWEEK(res.date), 1) AS day, rev.content as content from review as rev right join reservation as res on rev.user_email = res.id and rev.destination_id = res.destination_id where res.status = 1 and res.id = "${email}"`;
+      const sql = `select res.id, res.destination_id, date_format(res.date, "%m월 %d일") as format_date, SUBSTR(_UTF8'일월화수목금토', DAYOFWEEK(res.date), 1) AS day, rev.content as content from review as rev right join reservation as res on rev.user_email = res.id and rev.destination_id = res.destination_id where res.status = 1 and res.id = "${email}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 유저 이메일로 유저가 선택한 키워드 id 조회하는 함수
+   async findKeywordIdByUserEmail(email: string) {
+      const sql = `select keyword_id from user_keyword where user_email = "${email}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 국가 id로 대륙 이름, 국가 이름 조회하는 함수
+   async findContinentAndCountryNameByCountryId(id: number) {
+      const sql = `select cou.name as country_name, con.name as continent_name from countries as cou join continent as con on cou.continent_id = con.id where cou.id = ${id}`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
