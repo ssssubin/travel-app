@@ -183,7 +183,7 @@ export class MainService {
             const date = reservation.format_date.split(" ");
             const day = reservation.day;
 
-            return `${date[0]} ${date[1]} ${date[2]}(${day}) ${date[3]}`;
+            return `${date[0]} ${date[1]}(${day}) ${date[2]}`;
          });
          return { destinationIdList, reservationDateList };
       }
