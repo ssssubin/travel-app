@@ -41,7 +41,7 @@ export class AccountController {
 
    @Get("auth/sign-in/google")
    @UseGuards(AuthGuard("google"))
-   async googleSignIn() {}
+   googleSignIn() {}
 
    @Get("auth/sign-in/google/callback")
    @UseGuards(AuthGuard("google"))
@@ -57,5 +57,15 @@ export class AccountController {
    @UseGuards(AuthGuard("naver"))
    naverSignInCallback(@Res({ passthrough: true }) res: Response, @Req() req: Request) {
       return this.accountService.naverSignIn(res, req);
+   }
+
+   @Get("auth/sign-in/kakao")
+   @UseGuards(AuthGuard("kakako"))
+   kakakoSignIn() {}
+
+   @Get("auth/sign-in/kakao/callback")
+   @UseGuards(AuthGuard("kakako"))
+   kakakoSignInCallback(@Res({ passthrough: true }) res: Response, @Req() req: Request) {
+      return this.accountService.kakaoSignIn(res, req);
    }
 }
