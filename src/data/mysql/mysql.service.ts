@@ -173,7 +173,7 @@ export class MysqlService {
 
    // 유저 이메일로 방문한 여행지 조회하는 함수
    async findVisitedDestinationByUserEmail(email: string) {
-      const sql = `select res.id, res.destination_id, date_format(res.date, "%Y년 %m월 %d일 %H:%i") as format_date, SUBSTR(_UTF8'일월화수목금토', DAYOFWEEK(res.date), 1) AS day, rev.content as content from review as rev right join reservation as res on rev.user_email = res.id and rev.destination_id = res.destination_id where res.status = 1 and res.id = "${email}"`;
+      const sql = `select res.id, res.destination_id, date_format(res.date, "%m월 %d일") as format_date, SUBSTR(_UTF8'일월화수목금토', DAYOFWEEK(res.date), 1) AS day, rev.content as content from review as rev right join reservation as res on rev.user_email = res.id and rev.destination_id = res.destination_id where res.status = 1 and res.id = "${email}"`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }

@@ -49,7 +49,7 @@ export class MyPageService {
             const formatDate = foundVisitedDestination[i].format_date.split(" ");
             payload.push({
                image: mainImage[i],
-               date: `${formatDate[1]} ${formatDate[2]}(${foundVisitedDestination[i].day}) ${formatDate[3]}`,
+               date: `${formatDate[0]} ${formatDate[1]}(${foundVisitedDestination[i].day})`,
                name: destinationList[i],
                rating: rating[i],
                review: foundVisitedDestination[i].content,
