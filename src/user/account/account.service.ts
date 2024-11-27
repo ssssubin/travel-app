@@ -175,7 +175,10 @@ export class AccountService {
          // 회원가입 페이지로
          if (findUser[0].count === 0) {
             res.statusCode = 301;
-            return { err: null, data: { email, message: "회원가입 페이지로 이동합니다." } };
+            return {
+               err: null,
+               data: { email, url: process.env.SIGN_UP_URL },
+            };
          }
 
          // JWT 발급한 후, 쿠키에 담아 보냄
@@ -198,7 +201,36 @@ export class AccountService {
          // 회원가입 페이지로
          if (foundEmail[0].count === 0) {
             res.statusCode = 301;
-            return { err: null, data: { email, message: "회원가입 페이지로 이동합니다." } };
+            return {
+               err: null,
+               data: { email, url: process.env.SIGN_UP_URL },
+            };
+         }
+
+         // JWT 발급한 후, 쿠키에 담아 보냄
+         const token = await this.jwtService.signAsync({ email }, { secret: process.env.USER_SECRET_KEY });
+         res.cookie("_uu", token, { httpOnly: true, secure: true });
+         return { err: null, data: "로그인에 성공하셨습니다. 환영합니다 :)" };
+      } catch (e) {
+         throw e;
+      }
+   }
+
+   // 카카오톡 로그인 API
+   async kakaoSignIn(res: Response, req) {
+      try {
+         // 카카오 이메일
+         const { email } = req.user;
+         // 유저 존재 여부 확인
+         const foundEmail = await this.mysqlService.isDuplicateEmail(email);
+         // 카카오 로그인으로 로그인하려는 이메일이 db에 존재하지 않는 경우
+         // 회원가입 페이지로
+         if (foundEmail[0].count === 0) {
+            res.statusCode = 301;
+            return {
+               err: null,
+               data: { email, url: process.env.SIGN_UP_URL },
+            };
          }
 
          // JWT 발급한 후, 쿠키에 담아 보냄
