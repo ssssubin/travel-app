@@ -60,6 +60,7 @@ export class MysqlCreateTableService {
       const sql = `CREATE TABLE IF NOT EXISTS users( 
        email VARCHAR(150) NOT NULL PRIMARY KEY,
        name VARCHAR(30) NOT NULL,
+       image VARCHAR(200) DEFAULT NULL,
        password VARCHAR(100) NOT NULL,
        city_id INT NOT NULL,
        FOREIGN KEY (city_id) REFERENCES cities (id)
@@ -96,7 +97,7 @@ export class MysqlCreateTableService {
    async createUserKeywordTable() {
       const sql = `CREATE TABLE IF NOT EXISTS user_keyword(
        user_email VARCHAR(150) NOT NULL,
-       keyword_id INT NOT NULL,
+       keyword_id INT,
        FOREIGN KEY (user_email) REFERENCES users (email) ON DELETE CASCADE,
        FOREIGN KEY (keyword_id) REFERENCES keyword (id) ON UPDATE CASCADE ON DELETE CASCADE
     )`;

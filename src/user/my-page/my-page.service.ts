@@ -17,11 +17,6 @@ export class MyPageService {
          const foundReservation = await this.mainService.getReservation(res);
          // 마이페이지 조회하려는 유저 이메일
          const { email } = res.locals.user;
-         // 유저 정보 조회
-         const foundUser = await this.mysqlService.findUserByEmail(email);
-
-         // 유저 이메일, 이름 정보
-         const user = { email, name: foundUser[0].name };
 
          // 유저가 방문한 여행지 리스트
          const foundVisitedDestination = await this.mysqlService.findVisitedDestinationByUserEmail(email);
@@ -55,7 +50,7 @@ export class MyPageService {
                review: foundVisitedDestination[i].content,
             });
          }
-         return { err: null, data: { user, review: payload, reservation: foundReservation } };
+         return { err: null, data: { review: payload, reservation: foundReservation } };
       } catch (e) {
          throw e;
       }
@@ -69,7 +64,7 @@ export class MyPageService {
          const keywordList: string[] = await Promise.all(
             foundKeywordId.map(async (id) => {
                const foundKeyword = await this.mysqlService.findKeywordNameById(id.keyword_id);
-               return foundKeyword[0].name;
+               return id.keyword_id === null ? null : foundKeyword[0].name;
             }),
          );
          return keywordList;
@@ -96,28 +91,86 @@ export class MyPageService {
 
    // 프로필 조회 API
    async getProfile(res: Response) {
-      const { email } = res.locals.user;
-      // 유저 정보 조회
-      const foundUser = await this.mysqlService.findUserByEmail(email);
-      // 유저 존재 여부 확인
-      if (foundUser[0] === undefined) {
-         throw new NotFoundException("존재하지 않는 유저입니다.");
+      try {
+         const { email } = res.locals.user;
+         // 유저 정보 조회
+         const foundUser = await this.mysqlService.findUserByEmail(email);
+         // 유저 존재 여부 확인
+         if (foundUser[0] === undefined) {
+            throw new NotFoundException("존재하지 않는 유저입니다.");
+         }
+
+         // 유저가 선택한 키워드 리스트
+         const keywordList = await this.keywordList(email);
+
+         // 유저가 속해있는 region
+         const region = await this.getRegion(foundUser[0].city_id);
+
+         return {
+            err: null,
+            data: {
+               user: {
+                  email,
+                  name: foundUser[0].name,
+                  image: foundUser[0].image,
+                  continent: region[0],
+                  country: region[1],
+                  city: region[2],
+               },
+               keyword: keywordList,
+            },
+         };
+      } catch (e) {
+         throw e;
       }
+   }
 
-      // 유저가 선택한 키워드 리스트
-      const keywordList = await this.keywordList(email);
+   // 키워드 수정 API
+   async updateKeyword(res: Response, keyword: string[]) {
+      try {
+         // 유저 이메일
+         const { email } = res.locals.user;
+         // 요청 받은 키워드 담는 배열 생성
+         const keywordList = [];
 
-      // 유저가 속해있는 region
-      const region = await this.getRegion(foundUser[0].city_id);
+         // 키워드가 아무것도 오지 않았을 경우, null로 채움
+         if (keyword.length === 0) {
+            keywordList.push(null, null, null, null, null);
+         }
 
-      return {
-         err: null,
-         data: {
-            keyword: keywordList,
-            continent: region[0],
-            country: region[1],
-            city: region[2],
-         },
-      };
+         // 들어온 키워드들 배열에 담고 5개보다 적게 들어왔을 경우,
+         // 5 - 요청 받은 키워드 길이만큼 null로 채움
+         keyword.map((value) => keywordList.push(value));
+         for (let i = 0; i < 5 - keyword.length; i++) {
+            keywordList.push(null);
+         }
+         // 키워드 id 리스트
+         const keywordIdList = await Promise.all(
+            keywordList.map(async (keyword) => {
+               // 키워드 이름으로 키워드 id 조회
+               const foundKeywordId = await this.mysqlService.findKeywordIdByName(keyword);
+               // 키워드 이름이 null이 아니면서 키워드 id 조회 결과가 없는 경우
+               if (foundKeywordId[0] === undefined && keyword !== null) {
+                  throw new NotFoundException("존재하지 않는 키워드입니다.");
+               }
+               // 키워드가 null이면 null 반환
+               // 아니면 키워드 id 반환
+               return keyword === null ? null : foundKeywordId[0].id;
+            }),
+         );
+
+         // 유저가 선택한 기존 키워드 삭제
+         await this.mysqlService.deleteUserKeyword(email);
+         await Promise.all(
+            keywordIdList.map(async (id) => {
+               // 유저가 변경한 키워드로 업데이트
+               await this.mysqlService.updateUserKeyword(email, id);
+            }),
+         );
+
+         return { err: null, data: "키워드가 수정되었습니다." };
+      } catch (e) {
+         throw e;
+      }
    }
 }
