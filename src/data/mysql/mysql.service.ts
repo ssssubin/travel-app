@@ -212,4 +212,11 @@ export class MysqlService {
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
+
+   // 쿼리 실행하는 함수
+   async query(sql: string, params: any[] = []) {
+      // 쿼리문 실행하고 결과 반환
+      const [rows] = await this.pool.execute(sql, params);
+      return rows;
+   }
 }
