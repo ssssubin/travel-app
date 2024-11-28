@@ -101,6 +101,13 @@ export class MysqlService {
       return rows;
    }
 
+   // 유저 - 키워드 초기화
+   async initializationKeyword(email: string) {
+      const sql = `INSERT INTO user_keyword VALUES("${email}", null), ("${email}", null), ("${email}", null),("${email}", null),("${email}", null)`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
    // 이메일로 유저 정보 조회하는 함수
    async findUserByEmail(email: string) {
       const sql = `SELECT * FROM users WHERE email = "${email}"`;
@@ -188,6 +195,20 @@ export class MysqlService {
    // 국가 id로 대륙 이름, 국가 이름 조회하는 함수
    async findContinentAndCountryNameByCountryId(id: number) {
       const sql = `select cou.name as country_name, con.name as continent_name from countries as cou join continent as con on cou.continent_id = con.id where cou.id = ${id}`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 유저 - 키워드 삭제하는 함수
+   async deleteUserKeyword(email: string) {
+      const sql = `DELETE FROM user_keyword WHERE user_email = "${email}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 유저가 선택한 키워드 업데이트 하는 함수
+   async updateUserKeyword(email: string, keyword: number) {
+      const sql = `INSERT INTO user_keyword values("${email}", ${keyword})`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }

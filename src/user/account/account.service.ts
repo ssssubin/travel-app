@@ -59,8 +59,11 @@ export class AccountService {
          // 비밀번호 해시화
          const hashPassword = await bcrypt.hash(password, 10);
 
-         // 회원 등록
-         await this.mysqlService.registerUser(email, name, hashPassword, cityId);
+         // 회원 등록 및 유저 - 키워드 null로 설정
+         await Promise.all([
+            this.mysqlService.registerUser(email, name, hashPassword, cityId),
+            this.mysqlService.initializationKeyword(email),
+         ]);
 
          return { err: null, data: "회원가입 되었습니다. 로그인 해주세요 :)" };
       } catch (e) {

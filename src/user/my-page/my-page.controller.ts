@@ -1,4 +1,4 @@
-import { Controller, Get, Res } from "@nestjs/common";
+import { Body, Controller, Get, Put, Res } from "@nestjs/common";
 import { MyPageService } from "./my-page.service";
 import { Response } from "express";
 
@@ -14,5 +14,10 @@ export class MyPageController {
    @Get("profile")
    async getProfile(@Res({ passthrough: true }) res: Response) {
       return await this.mypageService.getProfile(res);
+   }
+
+   @Put("keyword")
+   async updateKeyword(@Res({ passthrough: true }) res: Response, @Body() data: { keyword: string[] }) {
+      return await this.mypageService.updateKeyword(res, data.keyword.slice(0, 5));
    }
 }
