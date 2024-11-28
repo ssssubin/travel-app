@@ -16,6 +16,10 @@ export class MyPageController {
       return await this.mypageService.getProfile(res);
    }
 
+   @Get("keyword")
+   async getKeyword() {
+      return await this.mypageService.getKeyword();
+   }
    @Put("keyword")
    async updateKeyword(@Res({ passthrough: true }) res: Response, @Body() data: { keyword: string[] }) {
       return await this.mypageService.updateKeyword(res, data.keyword.slice(0, 5));

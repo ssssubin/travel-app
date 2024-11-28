@@ -173,4 +173,18 @@ export class MyPageService {
          throw e;
       }
    }
+
+   // 전체 키워드 조회 API
+   async getKeyword() {
+      // 전체 키워드 조회
+      const sql = `SELECT name FROM keyword`;
+      const foundKeyword = await this.mysqlService.query(sql);
+      if (Array.isArray(foundKeyword)) {
+         // 키워드명만 추출해서 배열로 생성
+         const keywordList = foundKeyword.map((keyword) => {
+            return keyword.name;
+         });
+         return { err: null, data: keywordList };
+      }
+   }
 }
