@@ -1,7 +1,9 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Response } from "express";
 import { MysqlService } from "src/data/mysql/mysql.service";
 import { MainService } from "src/main/main.service";
+import { updateUserDto } from "../dto/update-user.dto";
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class MyPageService {
@@ -125,6 +127,48 @@ export class MyPageService {
       }
    }
 
+   // 프로필 수정 API
+   async updateProfile(res: Response, updateData: updateUserDto) {
+      // 쿠키에 접근하여 얻은 유저 이메일
+      const userEmail = res.locals.user.email;
+      // 유저 정보 조회
+      const foundUser = await this.mysqlService.findUserByEmail(userEmail);
+      const { email, name, image, password, continent, country, city } = updateData;
+      // 쿠키에 접근하여 얻은 이메일과 유저가 수정하려는 이메일이 다른 경우
+      if (userEmail !== email) {
+         throw new BadRequestException("이메일은 수정 불가합니다.");
+      }
+
+      const isPassword = await bcrypt.compare(password, foundUser[0].password);
+      // 입력한 비밀번호와 db에 저장된 비밀번호가 불일치한 경우
+      if (isPassword === false) {
+         throw new BadRequestException("비밀번호가 일치하지 않습니다.");
+      }
+
+      const foundContinent = await this.mysqlService.findContinentIdByName(continent);
+      // 유저가 선택한 대륙이 db에 존재하지 않는 경우
+      if (foundContinent[0] === undefined) {
+         throw new BadRequestException("존재하지 않는 대륙입니다.");
+      }
+
+      const foundCountry = await this.mysqlService.findCountryIdByName(country);
+      // 유저가 선택한 국가가 db에 존재하지 않는 경우
+      if (foundCountry[0] === undefined) {
+         throw new BadRequestException("존재하지 않는 국가입니다.");
+      }
+
+      const foundCity = await this.mysqlService.findCityIdByName(city);
+      // 유저가 선택한 도시가 db에 존재하지 않는 경우
+      if (foundCity[0] === undefined) {
+         throw new BadRequestException("존재하지 않는 도시입니다.");
+      }
+
+      // 유저 정보 업데이트
+      await this.mysqlService.updateUser(userEmail, name, image === null ? null : image, foundCity[0].id);
+
+      return { err: null, data: "회원 정보가 수정되었습니다." };
+   }
+
    // 키워드 수정 API
    async updateKeyword(res: Response, keyword: string[]) {
       try {
@@ -171,6 +215,20 @@ export class MyPageService {
          return { err: null, data: "키워드가 수정되었습니다." };
       } catch (e) {
          throw e;
+      }
+   }
+
+   // 전체 키워드 조회 API
+   async getKeyword() {
+      // 전체 키워드 조회
+      const sql = `SELECT name FROM keyword`;
+      const foundKeyword = await this.mysqlService.query(sql);
+      if (Array.isArray(foundKeyword)) {
+         // 키워드명만 추출해서 배열로 생성
+         const keywordList = foundKeyword.map((keyword) => {
+            return keyword.name;
+         });
+         return { err: null, data: keywordList };
       }
    }
 }

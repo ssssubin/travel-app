@@ -212,4 +212,18 @@ export class MysqlService {
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
+
+   // 유저 정보 업데이트 하는 함수
+   async updateUser(email: string, name: string, image: string | null, cityId: number) {
+      const sql = `UPDATE users SET name = "${name}", image = "${image}", city_id = ${cityId} WHERE email = "${email}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 쿼리 실행하는 함수
+   async query(sql: string, params: any[] = []) {
+      // 쿼리문 실행하고 결과 반환
+      const [rows] = await this.pool.execute(sql, params);
+      return rows;
+   }
 }
