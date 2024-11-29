@@ -26,8 +26,14 @@ export class httpExceptionFilter implements ExceptionFilter {
          exception instanceof HttpException ? exception.getResponse() : "서버 오류입니다. 잠시 후 다시 이용해주세요.";
 
       // 에러메시지 타입이 object인 경우 message만 가져옴
-      const err = typeof errResponse === "object" ? (errResponse as any).message : errResponse;
-      // 상태 코드, 에러 메시지 보냄
-      res.status(status).json({ err, data: null });
+      if (typeof errResponse === "object") {
+         const err =
+            typeof (errResponse as any).message === "string"
+               ? (errResponse as any).message
+               : (errResponse as any).message[0];
+
+         // 상태 코드, 에러 메시지 보냄
+         res.status(status).json({ err, data: null });
+      }
    }
 }
