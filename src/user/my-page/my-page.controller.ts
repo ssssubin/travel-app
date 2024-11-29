@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Put, Res } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Put, Res } from "@nestjs/common";
 import { MyPageService } from "./my-page.service";
 import { Response } from "express";
 import { updateUserDto } from "../dto/update-user.dto";
@@ -30,5 +30,10 @@ export class MyPageController {
    @Put("keyword")
    async updateKeyword(@Res({ passthrough: true }) res: Response, @Body() data: { keyword: string[] }) {
       return await this.mypageService.updateKeyword(res, data.keyword.slice(0, 5));
+   }
+
+   @Delete("withdrawal")
+   async withdrawalUser(@Res({ passthrough: true }) res: Response) {
+      return await this.mypageService.withdrawalUser(res);
    }
 }
