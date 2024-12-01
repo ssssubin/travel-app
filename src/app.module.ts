@@ -61,6 +61,8 @@ export class AppModule implements OnModuleInit, NestModule {
 
    // 미들웨어 적용
    configure(consumer: MiddlewareConsumer) {
-      consumer.apply(AuthenticationMiddleware).forRoutes("main", "keyword", "region", "sign-out", "my-page");
+      consumer
+         .apply(AuthenticationMiddleware)
+         .forRoutes("main", "keyword", "region", "sign-out", "my-page", "recommendation");
    }
 }
