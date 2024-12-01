@@ -14,5 +14,6 @@ import { KakaoStrategy } from "./account/kakako.strategies";
    imports: [DataModule, JwtModule, MainModule],
    controllers: [AccountController, MyPageController],
    providers: [AccountService, GoogleStrategy, NaverStrategy, MyPageService, KakaoStrategy],
+   exports: [MyPageService],
 })
 export class UserModule {}
