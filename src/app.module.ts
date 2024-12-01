@@ -51,6 +51,7 @@ export class AppModule implements OnModuleInit, NestModule {
             this.createTableService.createDestinationInformationTable(),
             this.createTableService.createReservationTable(),
             this.createTableService.createReviewTable(),
+            this.createTableService.createEventScheduler(),
          ]);
       } catch (e) {
          console.error(e);
