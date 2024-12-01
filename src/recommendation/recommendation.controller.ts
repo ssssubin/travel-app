@@ -1,5 +1,6 @@
-import { Controller, Get, Query } from "@nestjs/common";
+import { Controller, Get, Query, Res } from "@nestjs/common";
 import { RecommendationService } from "./recommendation.service";
+import { Response } from "express";
 
 @Controller("recommendation")
 export class RecommendationController {
@@ -15,5 +16,11 @@ export class RecommendationController {
    @Get("region")
    async getRegion(@Query("region") region: string, @Query("page") page: number) {
       return await this.recommendationService.getRegion(region, page);
+   }
+
+   // 검색 API
+   @Get("search")
+   async search(@Res({ passthrough: true }) res: Response, @Query("search") search: string) {
+      return await this.recommendationService.search(res, search);
    }
 }
