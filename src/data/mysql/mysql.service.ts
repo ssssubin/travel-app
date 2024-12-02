@@ -96,7 +96,7 @@ export class MysqlService {
 
    // 유저 등록하는 함수
    async registerUser(email: string, name: string, password: string, cityId: number) {
-      const sql = `INSERT INTO users VALUES ("${email}", "${name}", "${password}", ${cityId})`;
+      const sql = `INSERT INTO users (email, name, password, city_id) VALUES ("${email}", "${name}", "${password}", ${cityId})`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
