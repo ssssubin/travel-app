@@ -1,9 +1,14 @@
 import { Injectable } from "@nestjs/common";
+import { Response } from "express";
 import { MysqlService } from "src/data/mysql/mysql.service";
+import { MyPageService } from "src/user/my-page/my-page.service";
 
 @Injectable()
 export class RecommendationService {
-   constructor(private mysqlService: MysqlService) {}
+   constructor(
+      private mysqlService: MysqlService,
+      private mypageService: MyPageService,
+   ) {}
 
    // 여행지별 키워드 리스트 반환하는 함수
    async destinationKeyword(keywordList: string[]) {
@@ -282,5 +287,203 @@ export class RecommendationService {
       }
 
       return { err: null, data: payload };
+   }
+
+   // 여행지별 지역 반환하는 함수
+   async destinationRegion(destinationIdList: number[]) {
+      // 여행지별 도시 id 조회
+      const foundDestinationCityId = await Promise.all(
+         destinationIdList.map(async (id) => {
+            const findCityId = await this.mysqlService.findCityIdByDestinationId(id);
+            return findCityId[0].city_id;
+         }),
+      );
+
+      // 도시 id로 지역 조회
+      const foundDeistinationRegion = await Promise.all(
+         foundDestinationCityId.map(async (id) => {
+            return await this.mypageService.getRegion(id);
+         }),
+      );
+      return foundDeistinationRegion;
+   }
+
+   // 사용자가 선택한 키워드 id 리스트와 검색한 여행지의 키워드 id 리스트 반환하는 함수
+   async userAndSearchKeywordList(email: string, destinationIdList: number[]) {
+      // KEY : 여행지 id, VALUE - 키워드 id[]를 가지는 MAP 객체
+      const destinationId = new Map<number, number[]>();
+      // 사용자가 선택한 키워드 id 조회
+      const foundUserKeywordId = await this.mysqlService.findKeywordIdByUserEmail(email);
+      // 검색한 여행지의 키워드 id 조회
+      await Promise.all(
+         destinationIdList.map(async (id) => {
+            // 여행지 id로 키워드 id 조회
+            const keywordId = await this.mysqlService.findKeywordIdByDestinationId(id);
+            if (Array.isArray(keywordId)) {
+               // 키워드 id 길이가 0이면 빈 배열 반환
+               if (keywordId.length === 0) return [];
+               // key가 여행지 id인 값이 없으면 빈 배열로 초기화
+               if (destinationId.get(id) === undefined) destinationId.set(id, []);
+               keywordId.map((keyword) => destinationId.get(id).push(keyword.keyword_id));
+            }
+         }),
+      );
+
+      return {
+         keywordIdList: Array.isArray(foundUserKeywordId) ? foundUserKeywordId.map((id) => id.keyword_id) : [],
+         destinationIdList: Array.from(destinationId),
+      };
+   }
+
+   // 검색지의 키워드 배열을 벡터로 변환하는 함수
+   keywordsToVector(keywordList: number[], idList: number[]) {
+      // 전체 키워드 리스트에 검색지의 키워드가 존재하면 1
+      // 없으면 0 반환
+      return keywordList.map((id) => (idList.includes(id) ? 1 : 0));
+   }
+
+   // 두 벡터 간의 코사인 유사도 계산하는 함수
+   cosineSimilarity(vectorA: number[], vectorB: number[]) {
+      // 벡터 A와 벡터 B의 내적 계산
+      const dotProduct = vectorA.reduce((sum, val, i) => sum + val * vectorB[i], 0);
+
+      // 벡터 A의 크기 계산
+      const magnitudeA = Math.sqrt(vectorA.reduce((sum, val) => sum + val ** 2, 0));
+      // 벡터 B의 크기 계산
+      const magnitudeB = Math.sqrt(vectorB.reduce((sum, val) => sum + val ** 2, 0));
+      // 벡터 크기가 0인 경우 유사도 계산 불가 -> 0 반환
+      if (magnitudeA === 0 || magnitudeB === 0) return 0;
+      // 코사인 유사도 계산 및 반환
+      return dotProduct / (magnitudeA * magnitudeB);
+   }
+
+   // 사용자 지역과 검색한 여행지 지역의 유사도 계산하는 함수
+   calculateRegionSimilarity(userRegion: string[], destinationRegion: string[]) {
+      // 비교할 최대 레벨 결정
+      // 빈 배열일 경우 연산 결과를 0으로 반환
+      if (userRegion.length === 0 || destinationRegion.length === 0) return 0;
+
+      // 공통 지역 개수 계산하는 변수 초기화
+      let commonLevel = 0;
+      for (let i = 0; i < 3; i++) {
+         // 사용자 지역과 여행지 지역이 일치하는 경우
+         if (userRegion[i] === destinationRegion[i]) commonLevel++;
+         else break;
+      }
+      return commonLevel / 3;
+   }
+
+   // 유사도 계산하여 반환하는 함수
+   async calculateSimilarity(email: string, foundDestinationIdList: number[]) {
+      // 사용자 이메일로 사용자 정보 조회
+      const foundUser = await this.mysqlService.findUserByEmail(email);
+
+      // 키워드 전체 id 리스트
+      const keywordList = [];
+      const getKeywordList = await this.mysqlService.getKeyword();
+      if (Array.isArray(getKeywordList)) {
+         getKeywordList.map((keyword) => keywordList.push(keyword.id));
+      }
+
+      // 사용자가 선택한 키워드 id 리스트와 사용자가 선택한 키워드를 가진 여행지 리스트
+      const { keywordIdList, destinationIdList } = await this.userAndSearchKeywordList(email, foundDestinationIdList);
+
+      // 사용자 지역 조회
+      const userRegion = await this.mypageService.getRegion(foundUser[0].city_id);
+      // 검색한 여행지 지역 리스트
+      const searchRegion = await this.destinationRegion(foundDestinationIdList);
+
+      // 사용자 키워드 벡터 생성
+      const keywordToVector = this.keywordsToVector(keywordList, keywordIdList);
+      // 검색한 지역 키워드 벡터 생성
+      const regionToVector = destinationIdList.map((region) => this.keywordsToVector(keywordList, region[1]));
+
+      // 키워드 유사도 계산
+      const keywordSimilarity = regionToVector.map((region) => this.cosineSimilarity(keywordToVector, region));
+      // 지역 유사도 계산
+      const regionSimilarity = searchRegion.map((region) => this.calculateRegionSimilarity(userRegion, region));
+
+      // 가중치 적용하여 최종 계산
+      const keywordWeight = 0.7;
+      const regionWeight = 0.3;
+      const finalSimlarity = [];
+      for (let i = 0; i < foundDestinationIdList.length; i++) {
+         finalSimlarity.push(
+            parseFloat((keywordSimilarity[i] * keywordWeight + regionSimilarity[i] * regionWeight).toFixed(3)),
+         );
+      }
+      // 최종 유사도 반환
+      return finalSimlarity;
+   }
+
+   // 검색 API
+   async search(res: Response, search: string) {
+      try {
+         // 사용자 이메일
+         const { email } = res.locals.user;
+         // 사용자가 검색한 내용
+         const searchList = search.split(" ");
+         // 사용자가 검색한 내용으로 조회한 여행지 id 리스트
+         const foundDestinationIdList = [];
+         await Promise.all(
+            searchList.map(async (search) => {
+               const destinationIdList = await this.mysqlService.findDestinationBySearch(search);
+               if (Array.isArray(destinationIdList)) {
+                  destinationIdList.map((id) => foundDestinationIdList.push(id.id));
+               }
+            }),
+         );
+
+         // 여행지 리스트(이름, 주소)
+         const destinationList = await Promise.all(
+            foundDestinationIdList.map(async (id) => {
+               const foundDestination = await this.mysqlService.findDestinationById(id);
+               return { name: foundDestination[0].name, address: foundDestination[0].address };
+            }),
+         );
+
+         // 검색한 여행지별 키워드 리스트
+         const keywordIdList = await this.getKeywordId(foundDestinationIdList);
+         const keywordList = keywordIdList.map((keyword) => keyword[1]);
+
+         // 여행지별 키워드 이름 리스트
+         const keyword = await this.getKeywordName(keywordList);
+
+         // 여행지별 이미지 리스트
+         const imageList = await this.regionImageList(foundDestinationIdList);
+
+         // 여행지별 지역 리스트
+         const foundDestinationRegion = await this.destinationRegion(foundDestinationIdList);
+
+         // 유사도 계산
+         const calculateSimilarity = await this.calculateSimilarity(email, foundDestinationIdList);
+
+         // response 데이터 배열(여행지 이름, 주소, 연관 키워드, 지역)
+         const payload: {
+            name: string;
+            address: string;
+            image: string[];
+            keyword: string[];
+            region: string;
+            similary: number;
+         }[] = [];
+
+         // 검색된 여행지 수만큼 반복문 실행
+         for (let i = 0; i < foundDestinationIdList.length; i++) {
+            payload.push({
+               name: destinationList[i].name,
+               address: destinationList[i].address,
+               image: imageList[i],
+               keyword: keyword[i],
+               region: `${foundDestinationRegion[i][1]}, ${foundDestinationRegion[i][2]}`,
+               similary: calculateSimilarity[i],
+            });
+         }
+
+         // 유사도 높은 순으로 데이터 응답
+         return { err: null, data: payload.sort((a, b) => b.similary - a.similary) };
+      } catch (e) {
+         throw e;
+      }
    }
 }

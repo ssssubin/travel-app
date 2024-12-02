@@ -220,6 +220,27 @@ export class MysqlService {
       return rows;
    }
 
+   // 유저가 검색한 내용을 가진 여행지 id를 조회하는 함수
+   async findDestinationBySearch(search: string) {
+      const sql = `SELECT id FROM destination WHERE name LIKE "%${search}%" or address LIKE "%${search}%"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 전체 키워드 조회하는 함수
+   async getKeyword() {
+      const sql = `SELECT * FROM keyword`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 여행지 id로 도시 id 조회하는 함수
+   async findCityIdByDestinationId(id: number) {
+      const sql = `SELECT city_id FROM destination WHERE id = ${id}`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
    // 쿼리 실행하는 함수
    async query(sql: string, params: any[] = []) {
       // 쿼리문 실행하고 결과 반환
