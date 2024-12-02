@@ -434,29 +434,32 @@ export class RecommendationService {
             }),
          );
 
+         // 여행지 id 중복 제거
+         const destinationIdList = Array.from(new Set(foundDestinationIdList));
+
          // 여행지 리스트(이름, 주소)
          const destinationList = await Promise.all(
-            foundDestinationIdList.map(async (id) => {
+            destinationIdList.map(async (id) => {
                const foundDestination = await this.mysqlService.findDestinationById(id);
                return { name: foundDestination[0].name, address: foundDestination[0].address };
             }),
          );
 
          // 검색한 여행지별 키워드 리스트
-         const keywordIdList = await this.getKeywordId(foundDestinationIdList);
+         const keywordIdList = await this.getKeywordId(destinationIdList);
          const keywordList = keywordIdList.map((keyword) => keyword[1]);
 
          // 여행지별 키워드 이름 리스트
          const keyword = await this.getKeywordName(keywordList);
 
          // 여행지별 이미지 리스트
-         const imageList = await this.regionImageList(foundDestinationIdList);
+         const imageList = await this.regionImageList(destinationIdList);
 
          // 여행지별 지역 리스트
-         const foundDestinationRegion = await this.destinationRegion(foundDestinationIdList);
+         const foundDestinationRegion = await this.destinationRegion(destinationIdList);
 
          // 유사도 계산
-         const calculateSimilarity = await this.calculateSimilarity(email, foundDestinationIdList);
+         const calculateSimilarity = await this.calculateSimilarity(email, destinationIdList);
 
          // response 데이터 배열(여행지 이름, 주소, 연관 키워드, 지역)
          const payload: {
@@ -469,7 +472,7 @@ export class RecommendationService {
          }[] = [];
 
          // 검색된 여행지 수만큼 반복문 실행
-         for (let i = 0; i < foundDestinationIdList.length; i++) {
+         for (let i = 0; i < destinationIdList.length; i++) {
             payload.push({
                name: destinationList[i].name,
                address: destinationList[i].address,
@@ -480,8 +483,10 @@ export class RecommendationService {
             });
          }
 
+         const sortedArr = payload.sort((a, b) => b.similary - a.similary).map(({ similary, ...value }) => value);
+
          // 유사도 높은 순으로 데이터 응답
-         return { err: null, data: payload.sort((a, b) => b.similary - a.similary) };
+         return { err: null, data: Array.from(new Set(sortedArr)) };
       } catch (e) {
          throw e;
       }
