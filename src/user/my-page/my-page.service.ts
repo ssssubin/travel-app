@@ -246,7 +246,7 @@ export class MyPageService {
          // 탈퇴하려는 회원 이메일
          const { email } = res.locals.user;
          // 회원 여부 체크하는 필드(is_user)를 0으로 바꾸고 탈퇴한 날짜를 현재 날짜로 업데이트
-         const sql = `UPDATE users SET is_user = 0, withdrawal_time = current_date() WHERE email = ?`;
+         const sql = `UPDATE users SET is_user = 0, withdrawal_date = CURRENT_DATE WHERE email = ?`;
          const params = [email];
          await this.mysqlService.query(sql, params);
 
