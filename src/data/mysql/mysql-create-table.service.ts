@@ -63,6 +63,8 @@ export class MysqlCreateTableService {
        image VARCHAR(200) DEFAULT NULL,
        password VARCHAR(100) NOT NULL,
        city_id INT NOT NULL,
+       is_user TINYINT(1) DEFAULT 1,
+       withdrawal_date date DEFAULT NULL,
        FOREIGN KEY (city_id) REFERENCES cities (id)
     )`;
       const [rows] = await this.pool.execute(sql);
@@ -176,6 +178,17 @@ export class MysqlCreateTableService {
          FOREIGN KEY (destination_id) REFERENCES destination (id) ON DELETE CASCADE
       )`;
       const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 매일 자정에 탈퇴한 회원 삭제하기 위한 이벤트 테이블 생성
+   async createEventScheduler() {
+      const sql = `CREATE EVENT IF NOT EXISTS delete_withdrawal_user ON SCHEDULE EVERY 1 DAY STARTS CURRENT_DATE 
+      DO BEGIN SET SQL_SAFE_UPDATES = 0; 
+      DELETE FROM users WHERE is_user = 0 and withdrawal_date < CURRENT_DATE; 
+      SET SQL_SAFE_UPDATES = 1; 
+      END;`;
+      const [rows] = await this.pool.query(sql);
       return rows;
    }
 }
