@@ -21,6 +21,11 @@ export class MysqlCreateTableService {
       return this.pool;
    }
 
+   // 사용 가능한 연결을 하나 가져오는 함수
+   getConnection() {
+      return this.pool.getConnection();
+   }
+
    // 대륙 테이블 생성하는 함수
    async createContinentTable() {
       const sql = `CREATE TABLE IF NOT EXISTS continent(
@@ -171,11 +176,24 @@ export class MysqlCreateTableService {
    // 리뷰 테이블 생성하는 함수
    async createReviewTable() {
       const sql = `CREATE TABLE IF NOT EXISTS review(
+         id VARCHAR(40) PRIMARY KEY,
          user_email VARCHAR(150) NOT NULL,
          destination_id INT NOT NULL,
+         rating DECIMAL(3,2) NOT NULL,
          content VARCHAR(300),
          FOREIGN KEY (user_email) REFERENCES users (email) ON DELETE CASCADE ON UPDATE CASCADE,
          FOREIGN KEY (destination_id) REFERENCES destination (id) ON DELETE CASCADE
+      )`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 리뷰 - 이미지 생성하는 함수
+   async createReviewImageTable() {
+      const sql = `CREATE TABLE IF NOT EXISTS review_image(
+         review_id VARCHAR(40) NOT NULL,
+         image VARCHAR(200) NOT NULL,
+         FOREIGN KEY (review_id) REFERENCES review (id) ON DELETE CASCADE ON UPDATE CASCADE
       )`;
       const [rows] = await this.pool.execute(sql);
       return rows;
