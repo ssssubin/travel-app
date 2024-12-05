@@ -9,11 +9,12 @@ import { MyPageController } from "./my-page/my-page.controller";
 import { MyPageService } from "./my-page/my-page.service";
 import { MainModule } from "src/main/main.module";
 import { KakaoStrategy } from "./account/kakako.strategies";
+import { ReviewService } from "./my-page/my-page-review.service";
 
 @Module({
    imports: [DataModule, JwtModule, MainModule],
    controllers: [AccountController, MyPageController],
-   providers: [AccountService, GoogleStrategy, NaverStrategy, MyPageService, KakaoStrategy],
+   providers: [AccountService, GoogleStrategy, NaverStrategy, MyPageService, KakaoStrategy, ReviewService],
    exports: [MyPageService],
 })
 export class UserModule {}

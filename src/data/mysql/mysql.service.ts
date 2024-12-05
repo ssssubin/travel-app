@@ -241,6 +241,34 @@ export class MysqlService {
       return rows;
    }
 
+   // 여행지 이름으로 여행지 조회하는 함수
+   async findDestinationByName(name: string) {
+      const sql = `SELECT id FROM destination WHERE name = "${name}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 리뷰 생성하는 함수
+   async createReview(id: string, email: string, destinationId: number, rating: number, content: string) {
+      const sql = `INSERT INTO review VALUES("${id}", "${email}", ${destinationId}, ${rating}, "${content}")`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 예약한 여행지 방문했을 경우 status 업데이트 하는 함수
+   async updateReservation(email: string, destinationId: number) {
+      const sql = `UPDATE reservation SET status = 1 WHERE id = "${email}" and destination_id = ${destinationId}`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 리뷰 - 이미지 등록하는 함수
+   async registerReviewImage(reviewId: string, image: string) {
+      const sql = `INSERT INTO review_image VALUES ("${reviewId}", "${image}")`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
    // 쿼리 실행하는 함수
    async query(sql: string, params: any[] = []) {
       // 쿼리문 실행하고 결과 반환

@@ -300,7 +300,7 @@ export class RecommendationService {
       );
 
       // 도시 id로 지역 조회
-      const foundDeistinationRegion = await Promise.all(
+      const foundDeistinationRegion: string[][] = await Promise.all(
          foundDestinationCityId.map(async (id) => {
             return await this.mypageService.getRegion(id);
          }),

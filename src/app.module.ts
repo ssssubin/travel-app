@@ -52,6 +52,7 @@ export class AppModule implements OnModuleInit, NestModule {
             this.createTableService.createReservationTable(),
             this.createTableService.createReviewTable(),
             this.createTableService.createEventScheduler(),
+            this.createTableService.createReviewImageTable(),
          ]);
       } catch (e) {
          console.error(e);
@@ -63,6 +64,6 @@ export class AppModule implements OnModuleInit, NestModule {
    configure(consumer: MiddlewareConsumer) {
       consumer
          .apply(AuthenticationMiddleware)
-         .forRoutes("main", "keyword", "region", "sign-out", "my-page", "recommendation");
+         .forRoutes("main", "keyword", "region", "sign-out", "my-page", "recommendation", "review");
    }
 }
