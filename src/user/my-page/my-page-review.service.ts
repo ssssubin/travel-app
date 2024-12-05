@@ -115,7 +115,7 @@ export class ReviewService {
          // 리뷰 - 이미지 데이터 저장
          await Promise.all(
             image.map(async (value) => {
-               await this.mysqlService.registerReivewImage(reviewId, value);
+               await this.mysqlService.registerReviewImage(reviewId, value);
             }),
          );
 
@@ -125,7 +125,7 @@ export class ReviewService {
          // 트랜잭션 커밋
          await connection.commit();
 
-         return { err: null, data: "리뷰가 작성되었습니다." };
+         return { err: null, data: { reviewId, message: "리뷰가 작성되었습니다." } };
       } catch (e) {
          // 트랜잭션 롤백
          await connection.rollback();
