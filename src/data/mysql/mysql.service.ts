@@ -263,7 +263,7 @@ export class MysqlService {
    }
 
    // 리뷰 - 이미지 등록하는 함수
-   async registerReivewImage(reviewId: string, image: string) {
+   async registerReviewImage(reviewId: string, image: string) {
       const sql = `INSERT INTO review_image VALUES ("${reviewId}", "${image}")`;
       const [rows] = await this.pool.execute(sql);
       return rows;
