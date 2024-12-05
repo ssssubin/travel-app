@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Response } from "express";
 import { MysqlService } from "src/data/mysql/mysql.service";
-import { createReviewDto } from "../my-page/dto/create-review.dto";
+import { createReviewDto } from "./dto/create-review.dto";
 import { v4 as uuidv4 } from "uuid";
 import { MysqlCreateTableService } from "src/data/mysql/mysql-create-table.service";
 import * as fs from "fs";
