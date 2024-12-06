@@ -277,6 +277,11 @@ export class ReviewService {
          const { email } = res.locals.user;
          // 리뷰 조회
          const foundReview = await this.mysqlService.findReviewByReviewId(id);
+         // 리뷰가 존재하지 않는 경우
+         if (foundReview[0] === undefined) {
+            throw new NotFoundException("리뷰가 존재하지 않습니다.");
+         }
+
          // 작성자와 삭제하려는 사람이 다른 경우
          if (foundReview[0].user_email !== email) {
             throw new ForbiddenException("삭제 권한이 없습니다.");
