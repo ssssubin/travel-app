@@ -269,6 +269,48 @@ export class MysqlService {
       return rows;
    }
 
+   // 리뷰 id로 리뷰 존재 여부 확인하는 함수
+   async isReviewByReviewId(reviewId: string) {
+      const sql = `SELECT COUNT(*) as count FROM review WHERE id = "${reviewId}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 리뷰 id로 리뷰 조회하는 함수
+   async findReviewByReviewId(reviewId: string) {
+      const sql = `SELECT user_email, destination_id FROM review WHERE id = "${reviewId}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 리뷰 id로 리뷰 이미지 조회하는 함수
+   async findReviewImageByReviewId(reviewId: string) {
+      const sql = `SELECT image FROM review_image WHERE review_id = "${reviewId}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 리뷰 id로 리뷰 이미지 삭제하는 함수
+   async deleteReviewImageByReviewId(reviewId: string) {
+      const sql = `DELETE FROM review_image WHERE review_id = "${reviewId}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 리뷰 수정하는 함수
+   async updateReviewByReviewId(reviewId: string, rating: number, content: string) {
+      const sql = `UPDATE review SET rating = ${rating}, content = "${content}" WHERE id = "${reviewId}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 리뷰 id로 리뷰 삭제하는 함수
+   async deleteReviewByReviewId(reviewId: string) {
+      const sql = `DELETE FROM review WHERE id = "${reviewId}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
    // 쿼리 실행하는 함수
    async query(sql: string, params: any[] = []) {
       // 쿼리문 실행하고 결과 반환
