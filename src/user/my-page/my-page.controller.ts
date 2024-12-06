@@ -111,4 +111,10 @@ export class MyPageController {
    ) {
       return await this.reviewService.updateReview(res, images, id, data);
    }
+
+   @Delete("review/:id")
+   async removeReview(@Res({ passthrough: true }) res: Response, @Param("id") id: string) {
+      await this.reviewService.removeReview(res, id);
+      return res.status(204).json();
+   }
 }

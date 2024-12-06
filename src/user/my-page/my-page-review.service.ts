@@ -178,9 +178,7 @@ export class ReviewService {
    }
 
    // 기존 이미지 제거하는 함수
-   async removeImage(reviewId: string, images: Express.Multer.File | null) {
-      if (!images) return null;
-
+   async removeImage(reviewId: string) {
       // 리뷰 id로 리뷰 이미지 조회
       const foundReview = await this.mysqlService.findReviewImageByReviewId(reviewId);
 
@@ -235,7 +233,7 @@ export class ReviewService {
          await this.validateUpdateData(email, date, id);
 
          // 기존 이미지 제거(from 서버)
-         const removeImage = await this.removeImage(id, images);
+         const removeImage = await this.removeImage(id);
 
          // 등록된 리뷰 이미지가 있는 경우
          if (removeImage !== null) {
@@ -259,7 +257,42 @@ export class ReviewService {
          // 트랜잭션 커밋
          await connection.commit();
 
-         return { err: null, data: { id, message: "리뷰가 수정되었습니다." } };
+         return { err: null, data: { reviewId: id, message: "리뷰가 수정되었습니다." } };
+      } catch (e) {
+         // 트랜잭션 롤백
+         await connection.rollback();
+         throw e;
+      } finally {
+         // 커넥션 반환
+         connection.release();
+      }
+   }
+
+   // 리뷰 삭제 API
+   // 이미지 삭제(DB & 서버)
+   async removeReview(res: Response, id: string) {
+      const connection = await this.mysqlCreateService.getConnection();
+      try {
+         // 유저 이메일
+         const { email } = res.locals.user;
+         // 리뷰 조회
+         const foundReview = await this.mysqlService.findReviewByReviewId(id);
+         // 작성자와 삭제하려는 사람이 다른 경우
+         if (foundReview[0].user_email !== email) {
+            throw new ForbiddenException("삭제 권한이 없습니다.");
+         }
+         // 리뷰 - 이미지 삭제(in Server)
+         await this.removeImage(id);
+         // 트랜잭션 시작
+         await connection.beginTransaction();
+         // 리뷰 - 이미지 삭제(in DB)
+         await this.mysqlService.deleteReviewImageByReviewId(id);
+         // 리뷰 삭제
+         await this.mysqlService.deleteReviewByReviewId(id);
+
+         // 트랜잭션 커밋
+         await connection.commit();
+         return;
       } catch (e) {
          // 트랜잭션 롤백
          await connection.rollback();
