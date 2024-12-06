@@ -304,6 +304,13 @@ export class MysqlService {
       return rows;
    }
 
+   // 리뷰 id로 리뷰 삭제하는 함수
+   async deleteReviewByReviewId(reviewId: string) {
+      const sql = `DELETE FROM review WHERE id = "${reviewId}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
    // 쿼리 실행하는 함수
    async query(sql: string, params: any[] = []) {
       // 쿼리문 실행하고 결과 반환
