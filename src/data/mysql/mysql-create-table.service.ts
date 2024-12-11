@@ -8,7 +8,7 @@ export class MysqlCreateTableService {
    constructor() {
       // db 연결 설정
       this.pool = mysql.createPool({
-         host: "127.0.0.1",
+         host: process.env.HOST,
          port: 3306,
          user: process.env.USER,
          password: process.env.PASSWORD,
