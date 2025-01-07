@@ -268,8 +268,10 @@ export class ReviewService {
       }
    }
 
-   // 리뷰 삭제 API
-   // 이미지 삭제(DB & 서버)
+   /**
+    * 리뷰 삭제 API
+    * DB와 서버에서 이미지 삭제
+    */
    async removeReview(res: Response, id: string) {
       const connection = await this.mysqlCreateService.getConnection();
       try {
