@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Res, UploadedFiles, UseInterceptors } from "@nestjs/common";
+import {
+   Body,
+   Controller,
+   Delete,
+   Get,
+   HttpCode,
+   Param,
+   Post,
+   Put,
+   Res,
+   UploadedFiles,
+   UseInterceptors,
+} from "@nestjs/common";
 import { MyPageService } from "./my-page.service";
 import { Response } from "express";
 import { updateUserDto } from "../dto/update-user.dto";
@@ -112,9 +124,9 @@ export class MyPageController {
       return await this.reviewService.updateReview(res, images, id, data);
    }
 
+   @HttpCode(204)
    @Delete("review/:id")
    async removeReview(@Res({ passthrough: true }) res: Response, @Param("id") id: string) {
-      await this.reviewService.removeReview(res, id);
-      return res.status(204).json();
+      return await this.reviewService.removeReview(res, id);
    }
 }
