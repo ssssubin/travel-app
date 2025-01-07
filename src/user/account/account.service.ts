@@ -89,7 +89,7 @@ export class AccountService {
 
          // jwt 토큰 생성
          const token = await this.jwtService.signAsync({ email }, { secret: process.env.USER_SECRET_KEY });
-         res.status(200).cookie("_uu", token, { httpOnly: true, secure: true });
+         res.cookie("_uu", token, { httpOnly: true, secure: true });
 
          return { err: null, data: "로그인에 성공하셨습니다. 환영합니다 :)" };
       } catch (e) {
@@ -113,7 +113,7 @@ export class AccountService {
    }
 
    // 회원가입 시 필요한 국가 API
-   async getCountries(res: Response, continent: string) {
+   async getCountries(continent: string) {
       try {
          // 대륙 이름으로 대륙 id 조회
          const continentId = await this.mysqlService.findContinentIdByName(continent);
@@ -126,7 +126,6 @@ export class AccountService {
          if (Array.isArray(foundCountries)) {
             // 대륙에 속해있는 국가 이름을 배열로 생성
             const countryList = foundCountries.map((country) => country.name);
-            res.statusCode = 200;
             return { err: null, data: countryList };
          }
       } catch (e) {
@@ -135,7 +134,7 @@ export class AccountService {
    }
 
    // 회원가입 시 필요한 도시 API
-   async getCities(res: Response, country: string) {
+   async getCities(country: string) {
       try {
          // 국가 이름으로 국가 id 조회
          const countryId = await this.mysqlService.findCountryIdByName(country);
@@ -148,7 +147,6 @@ export class AccountService {
          if (Array.isArray(foundCities)) {
             // 국가에 속해있는 도시 이름을 배열로 생성
             const cityList = foundCities.map((city) => city.name);
-            res.statusCode = 200;
             return { err: null, data: cityList };
          }
       } catch (e) {
