@@ -83,7 +83,14 @@
       "coverageDirectory": "../coverage",
       "testEnvironment": "node",
       "moduleNameMapper": {
-         "^src/(.*)$": "<rootDir>/$1"
+         "^@src/(.*)$": "<rootDir>/$1",
+         "^@data/(.*)$": "<rootDir>/data/$1",
+         "^@middleware/(.*)$": "<rootDir>/middleware/$1",
+         "^@recomm/(.*)$": "<rootDir>/recommendation/$1",
+         "^@user/(.*)$": "<rootDir>/user/$1",
+         "^@account/(.*)$": "<rootDir>/user/account/$1",
+         "^@mypage/(.*)$": "<rootDir>/user/my-page/$1",
+         "^@main/(.*)$": "<rootDir>/main/$1"
       }
    }
 }

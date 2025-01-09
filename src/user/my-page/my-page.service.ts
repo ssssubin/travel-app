@@ -1,8 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Response } from "express";
-import { MysqlService } from "src/data/mysql/mysql.service";
-import { MainService } from "src/main/main.service";
-import { updateUserDto } from "../dto/update-user.dto";
+import { MysqlService } from "@data/mysql/mysql.service";
+import { MainService } from "@main/main.service";
+import { updateUserDto } from "@user/dto/update-user.dto";
 import * as bcrypt from "bcrypt";
 
 @Injectable()

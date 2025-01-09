@@ -1,5 +1,5 @@
 import { Controller, Get, Res } from "@nestjs/common";
-import { MainService } from "./main.service";
+import { MainService } from "@main/main.service";
 import { Response } from "express";
 
 @Controller("main")
