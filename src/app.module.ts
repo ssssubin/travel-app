@@ -1,14 +1,14 @@
 import { MiddlewareConsumer, Module, NestModule, OnModuleInit } from "@nestjs/common";
-import { AppController } from "./app.controller";
-import { AppService } from "./app.service";
+import { AppController } from "@src/app.controller";
+import { AppService } from "@src/app.service";
 import { ConfigModule } from "@nestjs/config";
-import { MysqlCreateTableService } from "./data/mysql/mysql-create-table.service";
-import { DataModule } from "./data/data.module";
-import { RecommendationModule } from "./recommendation/recommendation.module";
+import { MysqlCreateTableService } from "@data/mysql/mysql-create-table.service";
+import { DataModule } from "@data/data.module";
+import { RecommendationModule } from "@recomm/recommendation.module";
 import { JwtModule } from "@nestjs/jwt";
-import { MainModule } from "./main/main.module";
-import { AuthenticationMiddleware } from "./middleware/authentication.middleware";
-import { UserModule } from "./user/user.module";
+import { MainModule } from "@main/main.module";
+import { AuthenticationMiddleware } from "@middleware/authentication.middleware";
+import { UserModule } from "@user/user.module";
 
 @Module({
    imports: [
@@ -27,10 +27,9 @@ import { UserModule } from "./user/user.module";
          }),
       }),
       MainModule,
-      UserModule,
    ],
    controllers: [AppController],
-   providers: [AppService, MysqlCreateTableService],
+   providers: [AppService],
 })
 export class AppModule implements OnModuleInit, NestModule {
    constructor(private createTableService: MysqlCreateTableService) {}

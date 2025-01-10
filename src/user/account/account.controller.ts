@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Post, Req, Res, UseGuards, UseInterceptors } from "@nestjs/common";
-import { AccountService } from "./account.service";
-import { continentDto, countryDto, createUserDto, signInUserDto } from "../dto/user.dto";
+import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards, UseInterceptors } from "@nestjs/common";
+import { AccountService } from "@account/account.service";
+import { continentDto, countryDto, createUserDto, signInUserDto } from "@user/dto/user.dto";
 import { Request, Response } from "express";
 import { AuthGuard } from "@nestjs/passport";
 
@@ -14,6 +14,7 @@ export class AccountController {
       return await this.accountService.createUser(userData);
    }
 
+   @HttpCode(200)
    @Post("sign-in")
    async signIn(@Res({ passthrough: true }) res: Response, @Body() userData: signInUserDto) {
       return await this.accountService.signInUser(res, userData);
@@ -24,11 +25,13 @@ export class AccountController {
       return await this.accountService.getContinent();
    }
 
+   @HttpCode(200)
    @Post("sign-up/country")
    async getCountries(@Body() data: continentDto) {
       return await this.accountService.getCountries(data.continent);
    }
 
+   @HttpCode(200)
    @Post("sign-up/city")
    async getCities(@Body() data: countryDto) {
       return await this.accountService.getCities(data.country);

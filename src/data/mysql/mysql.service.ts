@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import * as mysql from "mysql2/promise";
-import { MysqlCreateTableService } from "./mysql-create-table.service";
+import { MysqlCreateTableService } from "@data/mysql/mysql-create-table.service";
 
 @Injectable()
 export class MysqlService {

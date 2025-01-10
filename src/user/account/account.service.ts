@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { MysqlService } from "src/data/mysql/mysql.service";
-import { createUserDto, signInUserDto } from "../dto/user.dto";
+import { MysqlService } from "@data/mysql/mysql.service";
+import { createUserDto, signInUserDto } from "@user/dto/user.dto";
 import * as bcrypt from "bcrypt";
 import { Response } from "express";
 import { JwtService } from "@nestjs/jwt";
@@ -90,7 +90,6 @@ export class AccountService {
          // jwt 토큰 생성
          const token = await this.jwtService.signAsync({ email }, { secret: process.env.USER_SECRET_KEY });
          res.cookie("_uu", token, { httpOnly: true, secure: true });
-
          return { err: null, data: "로그인에 성공하셨습니다. 환영합니다 :)" };
       } catch (e) {
          throw e;

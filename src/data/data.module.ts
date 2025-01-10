@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
-import { MysqlService } from "./mysql/mysql.service";
-import { MysqlCreateTableService } from "./mysql/mysql-create-table.service";
+import { MysqlService } from "@data/mysql/mysql.service";
+import { MysqlCreateTableService } from "@data/mysql/mysql-create-table.service";
 
 @Module({
    providers: [MysqlService, MysqlCreateTableService],

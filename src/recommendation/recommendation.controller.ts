@@ -1,5 +1,5 @@
 import { Controller, Get, Query, Res } from "@nestjs/common";
-import { RecommendationService } from "./recommendation.service";
+import { RecommendationService } from "@recomm/recommendation.service";
 import { Response } from "express";
 
 @Controller("recommendation")

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { Response } from "express";
-import { MysqlService } from "src/data/mysql/mysql.service";
+import { MysqlService } from "@data/mysql/mysql.service";
 
 @Injectable()
 export class MainService {
