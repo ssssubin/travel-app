@@ -21,7 +21,7 @@ export class ReviewService {
    ) {}
 
    // 유효성 검증한 후, 여행지 id 반환하는 함수
-   async validateData(email: string, name: string, date: string) {
+   async validateData(email: string, name: string, date: string): Promise<number> {
       // 리뷰 작성하려는 여행지 id 조회
       const foundDestination = await this.mysqlService.findDestinationByName(name);
 
@@ -42,10 +42,10 @@ export class ReviewService {
             };
          });
 
-         // 방문한 여행지인지 확인
+         // 예약 날짜와 방문 날짜가 일치하는지 확인
          const isVisited = destinationId.filter((id) => id.id === foundDestination[0].id && id.date === date);
 
-         // 방문한 여행지가 아닌 경우
+         // 예약 날짜와 방문 날짜가 일치하지 않는 경우
          if (isVisited.length === 0) {
             throw new BadRequestException("방문하지 않은 여행지에 대해서는 리뷰를 작성할 수 없습니다.");
          }
@@ -96,6 +96,7 @@ export class ReviewService {
          // 유저 이메일
          const { email } = res.locals.user;
          const { name, date, rating, review } = reviewData;
+
          // 이미지 담는 배열 생성
          const image = [];
 
