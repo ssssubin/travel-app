@@ -1,0 +1,14 @@
+Dockerfile
+Dockerfile.nginx
+.dockerignore
+.git
+.gitignore
+*.log
+dist
+*.md
+*.sh
+*.yml
+node_modules
+.env
+LICENSE
+.DS_Store
