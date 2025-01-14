@@ -1,0 +1,9 @@
+{
+   "apps": [
+      {
+         "name": "travel-app",
+         "script": "/back/src/main.js",
+         "watch": true
+      }
+   ]
+}
