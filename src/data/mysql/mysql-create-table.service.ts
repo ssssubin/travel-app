@@ -67,7 +67,6 @@ export class MysqlCreateTableService {
        name VARCHAR(30) NOT NULL,
        image VARCHAR(200) DEFAULT NULL,
        password VARCHAR(100) NOT NULL,
-       city_id INT NOT NULL,
        is_user TINYINT(1) DEFAULT 1,
        withdrawal_date date DEFAULT NULL,
        FOREIGN KEY (city_id) REFERENCES cities (id)
