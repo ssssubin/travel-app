@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { MysqlService } from "@data/mysql/mysql.service";
 import { createUserDto, signInUserDto } from "@user/dto/user.dto";
 import * as bcrypt from "bcrypt";
@@ -13,8 +13,8 @@ export class AccountService {
    ) {}
 
    // 유효성 검증하는 함수
-   async validData(userData: createUserDto): Promise<number> {
-      const { email, password, confirmPassword, continent, country, city } = userData;
+   async validData(userData: createUserDto): Promise<boolean> {
+      const { email, password, confirmPassword } = userData;
 
       // 이메일 중복 확인
       const foundEmail = await this.mysqlService.isDuplicateEmail(email);
@@ -27,25 +27,7 @@ export class AccountService {
          throw new BadRequestException("비밀번호가 일치하지 않습니다.");
       }
 
-      // 대륙 존재 여부 판단
-      const isContinent = await this.mysqlService.isContinent(continent);
-      if (isContinent[0].count === 0) {
-         throw new NotFoundException("존재하지 않는 대륙입니다.");
-      }
-
-      // 국가 존재 여부 판단
-      const isCountry = await this.mysqlService.isCountry(country);
-      if (isCountry[0].count === 0) {
-         throw new NotFoundException("존재하지 않는 국가입니다.");
-      }
-
-      // 도시 존재 여부 판단
-      const foundCity = await this.mysqlService.findCityIdByName(city);
-      if (foundCity[0] === undefined) {
-         throw new NotFoundException("존재하지 않는 나라입니다.");
-      }
-
-      return foundCity[0].id;
+      return true;
    }
 
    // 회원가입 API
@@ -53,15 +35,15 @@ export class AccountService {
       try {
          const { email, name, password } = userData;
 
-         // 유효성 검증 후 도시 id 받음
-         const cityId = await this.validData(userData);
+         // 유효성 검증
+         await this.validData(userData);
 
          // 비밀번호 해시화
          const hashPassword = await bcrypt.hash(password, 10);
 
          // 회원 등록 및 유저 - 키워드 null로 설정
          await Promise.all([
-            this.mysqlService.registerUser(email, name, hashPassword, cityId),
+            this.mysqlService.registerUser(email, name, hashPassword),
             this.mysqlService.initializationKeyword(email),
          ]);
 
@@ -91,63 +73,6 @@ export class AccountService {
          const token = await this.jwtService.signAsync({ email }, { secret: process.env.USER_SECRET_KEY });
          res.cookie("_uu", token, { httpOnly: true, secure: true });
          return { err: null, data: "로그인에 성공하셨습니다. 환영합니다 :)" };
-      } catch (e) {
-         throw e;
-      }
-   }
-
-   // 회원가입 시 필요한 대륙 API
-   async getContinent() {
-      try {
-         // 전체 대륙 이름 조회
-         const continentName = await this.mysqlService.findAllContinentName();
-         if (Array.isArray(continentName)) {
-            // 전체 대륙 이름을 배열로 생성
-            const continentList = continentName.map((continent) => continent.name);
-            return { err: null, data: continentList };
-         }
-      } catch (e) {
-         throw e;
-      }
-   }
-
-   // 회원가입 시 필요한 국가 API
-   async getCountries(continent: string) {
-      try {
-         // 대륙 이름으로 대륙 id 조회
-         const continentId = await this.mysqlService.findContinentIdByName(continent);
-         if (continentId[0] === undefined) {
-            throw new NotFoundException("존재하지 않는 대륙입니다.");
-         }
-
-         // 대륙 id로 국가 이름 조회
-         const foundCountries = await this.mysqlService.findCountryNameByContinentId(continentId[0].id);
-         if (Array.isArray(foundCountries)) {
-            // 대륙에 속해있는 국가 이름을 배열로 생성
-            const countryList = foundCountries.map((country) => country.name);
-            return { err: null, data: countryList };
-         }
-      } catch (e) {
-         throw e;
-      }
-   }
-
-   // 회원가입 시 필요한 도시 API
-   async getCities(country: string) {
-      try {
-         // 국가 이름으로 국가 id 조회
-         const countryId = await this.mysqlService.findCountryIdByName(country);
-         if (countryId[0] === undefined) {
-            throw new NotFoundException("존재하지 않는 국가입니다.");
-         }
-
-         // 국가 id로 도시 이름 조회
-         const foundCities = await this.mysqlService.findCityNameByCountryId(countryId[0].id);
-         if (Array.isArray(foundCities)) {
-            // 국가에 속해있는 도시 이름을 배열로 생성
-            const cityList = foundCities.map((city) => city.name);
-            return { err: null, data: cityList };
-         }
       } catch (e) {
          throw e;
       }

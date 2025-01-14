@@ -20,7 +20,7 @@
       "paths": {
          "@src*": ["./src/*"],
          "@data*": ["./src/data/*"],
-         "@middleware*": ["./src/middleware/*"],
+         "@middleware*": ["src/common/middleware/*"],
          "@recomm*": ["./src/recommendation/*"],
          "@user*": ["./src/user/*"],
          "@account*": ["./src/user/account/*"],
