@@ -16,34 +16,39 @@
 # This specific template is located at:
 # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
 
-stages:          # List of stages for jobs, and their order of execution
-  - build
-  - test
-  - deploy
+image: docker:latest
 
-build-job:       # This job runs in the build stage, which runs first.
-  stage: build
-  script:
-    - echo "Compiling the code..."
-    - echo "Compile complete."
+services: docker:dind
 
-unit-test-job:   # This job runs in the test stage.
-  stage: test    # It only starts when the job in the build stage completes successfully.
-  script:
-    - echo "Running unit tests... This will take about 60 seconds."
-    - sleep 60
-    - echo "Code coverage is 90%"
+variables:
+   COMPOSE_FILE: docker-compose.yml
+   IMAGE_TAG: $CI_COMMIT_SHA
+   PROJECT_NAME: travel-app
 
-lint-test-job:   # This job also runs in the test stage.
-  stage: test    # It can run at the same time as unit-test-job (in parallel).
-  script:
-    - echo "Linting code... This will take about 10 seconds."
-    - sleep 10
-    - echo "No lint issues found."
+stages: # List of stages for jobs, and their order of execution
+   - build
+   - deploy
 
-deploy-job:      # This job runs in the deploy stage.
-  stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
-  environment: production
-  script:
-    - echo "Deploying application..."
-    - echo "Application successfully deployed."
+build-job:
+   stage: build
+   script:
+      - echo "빌드 중..."
+      - docker-compose build --build-arg NODE_ENV=production
+      - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+      - docker-compose push
+      - echo "빌드 완료"
+   rules: # commit branch가 main일 때만 실행
+      - if: $CI_COMMIT_BRANCH == "main"
+        when: never
+
+deploy-job:
+   stage: deploy
+   script:
+      - echo "배포 중..."
+      - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+      - docker-compose pull
+      - docker-compose up
+      - echo "배포 완료"
+   rules:
+      - if: $CI_COMMIT_BRANCH == "main"
+        when: on_success
