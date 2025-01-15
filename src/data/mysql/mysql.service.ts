@@ -214,8 +214,8 @@ export class MysqlService {
    }
 
    // 유저 정보 업데이트 하는 함수
-   async updateUser(email: string, name: string, image: string | null, cityId: number) {
-      const sql = `UPDATE users SET name = "${name}", image = "${image}", city_id = ${cityId} WHERE email = "${email}"`;
+   async updateUser(email: string, name: string, image: string | null) {
+      const sql = `UPDATE users SET name = "${name}", image = "${image}" WHERE email = "${email}"`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
@@ -307,6 +307,13 @@ export class MysqlService {
    // 리뷰 id로 리뷰 삭제하는 함수
    async deleteReviewByReviewId(reviewId: string) {
       const sql = `DELETE FROM review WHERE id = "${reviewId}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 위도, 경도로 반경 2km 이내 여행지 id 조회하는 함수
+   async findDestinationByGps(latitude: number, longitude: number) {
+      const sql = `SELECT id FROM destination_location WHERE SQRT(POWER(ABS(${latitude} - latitude), 2)+POWER(ABS(${longitude}-longitude), 2)) <= 0.02`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
