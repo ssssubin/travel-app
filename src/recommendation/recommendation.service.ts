@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Response } from "express";
 import { MysqlService } from "@data/mysql/mysql.service";
 import { MyPageService } from "@mypage/my-page.service";
-import { MainService } from "@srcmain/main.service";
+import { MainService } from "@main/main.service";
 
 @Injectable()
 export class RecommendationService {
