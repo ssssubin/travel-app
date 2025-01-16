@@ -3,7 +3,7 @@ import { RecommendationService } from "@recomm/recommendation.service";
 import { Test, TestingModule } from "@nestjs/testing";
 import { MainService } from "@main/main.service";
 import { RowDataPacket } from "mysql2";
-import { MyPageService } from "@mypage/my-page.service";
+import { MyPageService } from "@mypage/services/my-page.service";
 
 describe("RecommendationService", () => {
    let service: RecommendationService;

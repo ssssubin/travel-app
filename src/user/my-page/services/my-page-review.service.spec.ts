@@ -1,6 +1,6 @@
 import { Test } from "@nestjs/testing";
 import { MysqlService } from "@data/mysql/mysql.service";
-import { ReviewService } from "@mypage/my-page-review.service";
+import { ReviewService } from "@mypage/services/my-page-review.service";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { MysqlCreateTableService } from "@data/mysql/mysql-create-table.service";
 import { RowDataPacket } from "mysql2";

@@ -11,14 +11,14 @@ import {
    UploadedFiles,
    UseInterceptors,
 } from "@nestjs/common";
-import { MyPageService } from "@mypage/my-page.service";
+import { MyPageService } from "@mypage/services/my-page.service";
 import { Response } from "express";
 import { updateUserDto } from "@user/dto/update-user.dto";
 import { createReviewDto } from "@mypage/dto/create-review.dto";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
 import { extname } from "path";
-import { ReviewService } from "@mypage/my-page-review.service";
+import { ReviewService } from "@mypage/services/my-page-review.service";
 
 @Controller("my-page")
 export class MyPageController {

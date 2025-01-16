@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { Response } from "express";
 import { MysqlService } from "@data/mysql/mysql.service";
-import { MyPageService } from "@mypage/my-page.service";
+import { MyPageService } from "@mypage/services/my-page.service";
 import { MainService } from "@main/main.service";
 
 @Injectable()
