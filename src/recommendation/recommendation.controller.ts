@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Res } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Post, Query, Res } from "@nestjs/common";
 import { RecommendationService } from "@recomm/recommendation.service";
 import { Response } from "express";
 
@@ -22,5 +22,12 @@ export class RecommendationController {
    @Get("search")
    async search(@Res({ passthrough: true }) res: Response, @Query("search") search: string) {
       return await this.recommendationService.search(res, search);
+   }
+
+   // GPS 기반 여행지 추천 API
+   @HttpCode(200)
+   @Post("gps")
+   async getGpsRecommendation(@Body() gpsData: { latitude: number; longitude: number }) {
+      return await this.recommendationService.getGps(gpsData);
    }
 }
