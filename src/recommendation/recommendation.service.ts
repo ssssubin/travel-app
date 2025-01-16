@@ -2,12 +2,14 @@ import { Injectable } from "@nestjs/common";
 import { Response } from "express";
 import { MysqlService } from "@data/mysql/mysql.service";
 import { MyPageService } from "@mypage/my-page.service";
+import { MainService } from "@main/main.service";
 
 @Injectable()
 export class RecommendationService {
    constructor(
       private mysqlService: MysqlService,
       private mypageService: MyPageService,
+      private mainService: MainService,
    ) {}
 
    // 여행지별 키워드 리스트 반환하는 함수
@@ -44,7 +46,11 @@ export class RecommendationService {
    async destinationList(sortedList: [number, string[]][]) {
       // 여행지 ID 리스트
       const destinationIdList = sortedList.map((value) => value[0]);
-      const destination = await Promise.all(
+      const destination: {
+         name: string;
+         address: string;
+         cityId: number;
+      }[] = await Promise.all(
          destinationIdList.map(async (id) => {
             // 여행지 id 사용해서 이름, 주소, 이미지, 도시 아이디 조회
             const foundDestination = await this.mysqlService.findDestinationById(id);
@@ -150,7 +156,7 @@ export class RecommendationService {
    // 여행지별 키워드 이름 리스트 담는 배열 반환하는 함수
    async getKeywordName(keywordIdList: number[][]) {
       // 여행지별 키워드 리스트 담는 배열
-      const keywordList = [];
+      const keywordList: string[][] = [];
 
       // keywordIdList 순회
       for (const value of keywordIdList) {
@@ -257,11 +263,10 @@ export class RecommendationService {
       const destinationIdList = destinationList.map((destination) => destination.id);
 
       // 여행지별 키워드 id 리스트
-      const keywordIdList = await this.getKeywordId(destinationIdList);
-      const keywordList = keywordIdList.map((keyword) => keyword[1]);
+      const keywordIdList = (await this.getKeywordId(destinationIdList)).map((keyword) => keyword[1]);
 
       // 여행지별 키워드 이름 리스트
-      const keyword = await this.getKeywordName(keywordList);
+      const keyword = await this.getKeywordName(keywordIdList);
 
       // 여행지별 이미지 리스트
       const imageList = await this.regionImageList(destinationIdList);
@@ -406,7 +411,7 @@ export class RecommendationService {
       // 가중치 적용하여 최종 계산
       const keywordWeight = 0.7;
       const regionWeight = 0.3;
-      const finalSimlarity = [];
+      const finalSimlarity: number[] = [];
       for (let i = 0; i < foundDestinationIdList.length; i++) {
          finalSimlarity.push(
             parseFloat((keywordSimilarity[i] * keywordWeight + regionSimilarity[i] * regionWeight).toFixed(3)),
@@ -414,6 +419,21 @@ export class RecommendationService {
       }
       // 최종 유사도 반환
       return finalSimlarity;
+   }
+
+   // 여행지 id로 여행지명, 주소 리스트 반환하는 함수
+   async getDestinationNameAndAddress(destinationIdList: number[]): Promise<
+      {
+         name: string;
+         address: string;
+      }[]
+   > {
+      return await Promise.all(
+         destinationIdList.map(async (id) => {
+            const foundDestination = await this.mysqlService.findDestinationById(id);
+            return { name: foundDestination[0].name, address: foundDestination[0].address };
+         }),
+      );
    }
 
    // 검색 API
@@ -438,19 +458,13 @@ export class RecommendationService {
          const destinationIdList = Array.from(new Set(foundDestinationIdList));
 
          // 여행지 리스트(이름, 주소)
-         const destinationList = await Promise.all(
-            destinationIdList.map(async (id) => {
-               const foundDestination = await this.mysqlService.findDestinationById(id);
-               return { name: foundDestination[0].name, address: foundDestination[0].address };
-            }),
-         );
+         const destinationList = await this.getDestinationNameAndAddress(destinationIdList);
 
-         // 검색한 여행지별 키워드 리스트
-         const keywordIdList = await this.getKeywordId(destinationIdList);
-         const keywordList = keywordIdList.map((keyword) => keyword[1]);
+         // 검색한 여행지별 키워드 id 리스트
+         const keywordIdList = (await this.getKeywordId(destinationIdList)).map((keyword) => keyword[1]);
 
          // 여행지별 키워드 이름 리스트
-         const keyword = await this.getKeywordName(keywordList);
+         const keyword = await this.getKeywordName(keywordIdList);
 
          // 여행지별 이미지 리스트
          const imageList = await this.regionImageList(destinationIdList);
@@ -487,6 +501,64 @@ export class RecommendationService {
 
          // 유사도 높은 순으로 데이터 응답
          return { err: null, data: Array.from(new Set(sortedArr)) };
+      } catch (e) {
+         throw e;
+      }
+   }
+
+   // 현재 위치에서 반경 2km 이내의 여행지 id 리스트 반환하는 함수
+   async getDestinationIdListByGps(latitude: number, longitude: number) {
+      // 현재 위치에서 반경 2km 이내의 여행지 id 조회
+      const foundDestination = await this.mysqlService.findDestinationByGps(latitude, longitude);
+      if (Array.isArray(foundDestination)) {
+         const destinationIdList: number[] = foundDestination.map((destination) => destination.id);
+         return destinationIdList;
+      }
+   }
+
+   // 현재 위치 기반 여행지 추천 API
+   async getGps(gpsData: { latitude: number; longitude: number }) {
+      try {
+         // 위도, 경도 값 추출
+         const { latitude, longitude } = gpsData;
+
+         // 현재 위치에서 반경 2km 이내의 여행지 id 리스트
+         const destinationIdList = await this.getDestinationIdListByGps(latitude, longitude);
+
+         // 여행지별 키워드 id 리스트
+         const keywordIdList = (await this.getKeywordId(destinationIdList)).map((keyword) => keyword[1]);
+
+         // 여행지별 키워드 이름 리스트
+         const keyword = await this.getKeywordName(keywordIdList);
+
+         // 여행지별 대표 이미지 리스트
+         const imageList = await this.mainService.mainImageByDestination(destinationIdList);
+
+         // 여행지 리스트(이름, 주소)
+         const destinationList = await this.getDestinationNameAndAddress(destinationIdList);
+
+         // 여행지별 별점 리스트
+         const ratingList = await this.mainService.ratingByDestination(destinationIdList);
+
+         const payload: {
+            image: string;
+            name: string;
+            address: string;
+            keyword: string[];
+            rating: number;
+         }[] = [];
+
+         destinationIdList.forEach((id, i) => {
+            payload.push({
+               image: imageList[i],
+               name: destinationList[i].name,
+               address: destinationList[i].address,
+               keyword: keyword[i],
+               rating: ratingList[i],
+            });
+         });
+
+         return { err: null, data: payload };
       } catch (e) {
          throw e;
       }

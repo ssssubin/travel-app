@@ -198,6 +198,17 @@ export class MysqlCreateTableService {
       return rows;
    }
 
+   // 여행지 - 위치(위도, 경도) 테이블 생성하는 함수
+   async createDestinationLocationTable() {
+      const sql = `CREATE TABLE IF NOT EXISTS destination_location(
+         id INT NOT NULL,
+         latitude DECIMAL(8, 6) NOT NULL,
+         longitude DECIMAL(9, 6) NOT NULL,
+         FOREIGN KEY (id) REFERENCES destination (id) ON DELETE CASCADE)`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
    // 매일 자정에 탈퇴한 회원 삭제하기 위한 이벤트 테이블 생성
    async createEventScheduler() {
       const sql = `CREATE EVENT IF NOT EXISTS delete_withdrawal_user ON SCHEDULE EVERY 1 DAY STARTS CURRENT_DATE 

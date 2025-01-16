@@ -25,7 +25,8 @@
          "@user*": ["./src/user/*"],
          "@account*": ["./src/user/account/*"],
          "@mypage*": ["./src/user/my-page/*"],
-         "@main*": ["./src/main/*"]
+         "@main*": ["./src/main/*"],
+         "@common*": ["./src/common/*"]
       }
    }
 }
