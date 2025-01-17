@@ -73,40 +73,15 @@ export class MyPageService {
       }
    }
 
-   // 유저가 속해있는 리전 반환하는 함수
-   async getRegion(cityId: number) {
-      // 도시 이름, 국가 id 조회
-      const foundCity = await this.mysqlService.findCityById(cityId);
-      // 국가 id로 국가 이름, 대륙 이름 조회
-      const foundContinentAndCountry = await this.mysqlService.findContinentAndCountryNameByCountryId(
-         foundCity[0].country_id,
-      );
-      // 유저가 속한 리전 = ["대륙", "국가", "도시"]
-      const region: string[] = [
-         foundContinentAndCountry[0].continent_name,
-         foundContinentAndCountry[0].country_name,
-         foundCity[0].name,
-      ];
-
-      return region;
-   }
-
    // 프로필 조회 API
    async getProfile(res: Response) {
       try {
          const { email } = res.locals.user;
          // 유저 정보 조회
          const foundUser = await this.mysqlService.findUserByEmail(email);
-         // 유저 존재 여부 확인
-         if (foundUser[0] === undefined) {
-            throw new NotFoundException("존재하지 않는 유저입니다.");
-         }
 
          // 유저가 선택한 키워드 리스트
          const keywordList = await this.keywordList(email);
-
-         // 유저가 속해있는 region
-         const region = await this.getRegion(foundUser[0].city_id);
 
          return {
             err: null,
@@ -115,9 +90,6 @@ export class MyPageService {
                   email,
                   name: foundUser[0].name,
                   image: foundUser[0].image,
-                  continent: region[0],
-                  country: region[1],
-                  city: region[2],
                },
                keyword: keywordList,
             },
@@ -134,7 +106,7 @@ export class MyPageService {
          const userEmail = res.locals.user.email;
          // 유저 정보 조회
          const foundUser = await this.mysqlService.findUserByEmail(userEmail);
-         const { email, name, image, password, continent, country, city } = updateData;
+         const { email, name, image, password } = updateData;
          // 쿠키에 접근하여 얻은 이메일과 유저가 수정하려는 이메일이 다른 경우
          if (userEmail !== email) {
             throw new BadRequestException("이메일은 수정 불가합니다.");
@@ -146,26 +118,8 @@ export class MyPageService {
             throw new BadRequestException("비밀번호가 일치하지 않습니다.");
          }
 
-         const foundContinent = await this.mysqlService.findContinentIdByName(continent);
-         // 유저가 선택한 대륙이 db에 존재하지 않는 경우
-         if (foundContinent[0] === undefined) {
-            throw new BadRequestException("존재하지 않는 대륙입니다.");
-         }
-
-         const foundCountry = await this.mysqlService.findCountryIdByName(country);
-         // 유저가 선택한 국가가 db에 존재하지 않는 경우
-         if (foundCountry[0] === undefined) {
-            throw new BadRequestException("존재하지 않는 국가입니다.");
-         }
-
-         const foundCity = await this.mysqlService.findCityIdByName(city);
-         // 유저가 선택한 도시가 db에 존재하지 않는 경우
-         if (foundCity[0] === undefined) {
-            throw new BadRequestException("존재하지 않는 도시입니다.");
-         }
-
          // 유저 정보 업데이트
-         await this.mysqlService.updateUser(userEmail, name, image === null ? null : image, foundCity[0].id);
+         await this.mysqlService.updateUser(userEmail, name, image === null ? null : image);
 
          return { err: null, data: "회원 정보가 수정되었습니다." };
       } catch (e) {

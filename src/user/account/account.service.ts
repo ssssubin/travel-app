@@ -57,9 +57,9 @@ export class AccountService {
    async signInUser(res: Response, userData: signInUserDto) {
       try {
          const { email, password } = userData;
-         // 이메일 존재 여부 확인
          const foundUser = await this.mysqlService.findUserByEmail(email);
-         if (foundUser[0] === undefined) {
+         // 이메일이 존재하지 않거나 탈퇴한 회원인 경우
+         if (foundUser[0] === undefined || foundUser[0].is_user === 0) {
             throw new BadRequestException("이메일이나 비밀번호가 일치하지 않습니다.");
          }
 
@@ -71,7 +71,7 @@ export class AccountService {
 
          // jwt 토큰 생성
          const token = await this.jwtService.signAsync({ email }, { secret: process.env.USER_SECRET_KEY });
-         res.cookie("_uu", token, { httpOnly: true, secure: true });
+         res.cookie("_uu", token, { httpOnly: true });
          return { err: null, data: "로그인에 성공하셨습니다. 환영합니다 :)" };
       } catch (e) {
          throw e;

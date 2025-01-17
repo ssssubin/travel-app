@@ -7,7 +7,7 @@ import { DataModule } from "@data/data.module";
 import { RecommendationModule } from "@recomm/recommendation.module";
 import { JwtModule } from "@nestjs/jwt";
 import { MainModule } from "@main/main.module";
-import { AuthenticationMiddleware } from "@srccommon/middleware/authentication.middleware";
+import { AuthenticationMiddleware } from "@common/middleware/authentication.middleware";
 import { UserModule } from "@user/user.module";
 
 @Module({
