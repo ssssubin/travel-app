@@ -17,7 +17,9 @@ async function bootstrap() {
       }),
    );
    app.use(cookieParser());
-
+   app.enableCors({
+      origin: " http://3.105.45.246/",
+   });
    await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
