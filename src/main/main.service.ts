@@ -111,66 +111,6 @@ export class MainService {
       return rating;
    }
 
-   // 유저가 속한 지역의 여행지 조회 API
-   async getDestinationInUserRegion(res: Response) {
-      try {
-         const { email } = res.locals.user;
-         // 유저 조회
-         const foundUser = await this.mysqlService.findUserByEmail(email);
-         if (foundUser[0] === undefined) {
-            throw new NotFoundException("존재하지 않는 유저입니다.");
-         }
-
-         // 유저가 속해 있는 도시
-         const city = await this.mysqlService.findCityById(foundUser[0].city_id);
-
-         // 여행지 리스트
-         const destinationList = await this.destinationList(foundUser[0].city_id);
-         // 여행지 id 리스트
-         const destinationIdList = destinationList.map((destination) => destination.id);
-
-         // 여행지별 키워드 리스트
-         const keywordList = await Promise.all(
-            destinationIdList.map(async (id) => {
-               return await this.destinationKeywordList(id);
-            }),
-         );
-
-         // 여행지별 대표 이미지
-         const mainImage = await this.mainImageByDestination(destinationIdList);
-
-         // 평점 리스트
-         const rating = await this.ratingByDestination(destinationIdList);
-
-         // response 데이터 배열(여행지 대표 이미지, 이름, 주소, 연관 키워드, 평점)
-         const payload: {
-            image: string;
-            name: string;
-            address: string;
-            keyword: string[];
-            rating: number;
-         }[] = [];
-
-         // 여행지 id 리스트 길이만큼 반복문 실행하여 response 데이터 가공
-         for (let i = 0; i < destinationIdList.length; i++) {
-            payload.push({
-               image: mainImage[i],
-               name: destinationList[i].name,
-               address: destinationList[i].address,
-               keyword: keywordList[i],
-               rating: rating[i],
-            });
-         }
-
-         // 평점 높은 순으로 정렬
-         const resData = payload.sort((a, b) => b.rating - a.rating);
-
-         return { region: city[0].name, payload: resData };
-      } catch (e) {
-         throw e;
-      }
-   }
-
    // 유저가 예약한 여행지 리스트 & 예약 시간 리스트 반환하는 함수
    async resevationInformation(email: string) {
       // 유저가 예약한 정보(최근에 주문한 순으로 반환)
