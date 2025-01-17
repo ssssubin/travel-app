@@ -110,7 +110,7 @@ export class MysqlService {
 
    // 이메일로 유저 정보 조회하는 함수
    async findUserByEmail(email: string) {
-      const sql = `SELECT * FROM users WHERE email = "${email}"`;
+      const sql = `SELECT email, name, image, password, is_user FROM users WHERE email = "${email}"`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
