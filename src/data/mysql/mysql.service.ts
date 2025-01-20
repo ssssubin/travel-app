@@ -40,7 +40,7 @@ export class MysqlService {
 
    // 도시 id로 국가, 도시 조회하는 함수
    async findRegionByCityId(id: number) {
-      const sql = `SELECT co.name as country, ci.name as city FROM cities as ci JOIN countries as co ON ci.country_id = co.id and ci.country_id = "${id}"`;
+      const sql = `SELECT co.name as country, ci.name as city FROM cities as ci JOIN countries as co ON ci.country_id = co.id AND ci.country_id = "${id}"`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
@@ -89,7 +89,7 @@ export class MysqlService {
 
    // 도시 id로 여행지 조회
    async findDestinationByCityId(id: number, page: number, reqPerPage: number) {
-      const sql = `SELECT id, name, address FROM destination WHERE city_id = "${id}" limit ${reqPerPage * (page - 1)}, ${reqPerPage} `;
+      const sql = `SELECT id, name, address FROM destination WHERE city_id = "${id}" LIMIT ${reqPerPage * (page - 1)}, ${reqPerPage} `;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
@@ -173,28 +173,42 @@ export class MysqlService {
 
    // 유저 이메일로 예약 정보 조회하는 함수
    async findReservationByUserEmail(email: string) {
-      const sql = `SELECT destination_id, date_format(date, "%m월 %d일 %H:%i") as format_date, SUBSTR(_UTF8'일월화수목금토', DAYOFWEEK(date), 1) AS day FROM reservation WHERE id = "${email}" and status = 0 ORDER BY reservation_time DESC`;
+      const sql = `SELECT id, destination_id, DATE_FORMAT(date, "%m월 %d일 %H:%i") as format_date, SUBSTR(_UTF8'일월화수목금토', DAYOFWEEK(date), 1) as day FROM reservation WHERE user_email = "${email}" AND status = 0 ORDER BY reservation_time DESC`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
 
    // 유저 이메일로 방문한 여행지 조회하는 함수
    async findVisitedDestinationByUserEmail(email: string) {
-      const sql = `select res.id, res.destination_id, date_format(res.date, "%m월 %d일") as format_date, SUBSTR(_UTF8'일월화수목금토', DAYOFWEEK(res.date), 1) AS day, rev.content as content from review as rev right join reservation as res on rev.user_email = res.id and rev.destination_id = res.destination_id where res.status = 1 and res.id = "${email}"`;
+      const sql = `SELECT res.id, res.destination_id, DATE_FORMAT(res.date, "%m월 %d일") as format_date, SUBSTR(_UTF8'일월화수목금토', DAYOFWEEK(res.date), 1) as day, rev.content as content FROM review as rev RIGHT JOIN reservation as res ON rev.user_email = res.id AND rev.destination_id = res.destination_id WHERE res.status = 1 AND res.id = "${email}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 유저 이메일로 방문한 여행지 수 조회하는 함수
+   async countVisitedDestinationByUserEmail(email: string) {
+      const sql = `SELECT COUNT(destination_id) as count FROM reservation WHERE id = "${email}" AND status = 1`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
+   // 유저 이메일로 유저가 리뷰를 작성한 여행지 조회하는 함수
+   async findReviewByUserEmail(email: string) {
+      const sql = `SELECT id, destination_id, rating, content, reservation_id FROM review WHERE user_email = "${email}"`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
 
    // 유저 이메일로 유저가 선택한 키워드 id 조회하는 함수
    async findKeywordIdByUserEmail(email: string) {
-      const sql = `select keyword_id from user_keyword where user_email = "${email}"`;
+      const sql = `SELECT keyword_id FROM user_keyword WHERE user_email = "${email}"`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
 
    // 국가 id로 대륙 이름, 국가 이름 조회하는 함수
    async findContinentAndCountryNameByCountryId(id: number) {
-      const sql = `select cou.name as country_name, con.name as continent_name from countries as cou join continent as con on cou.continent_id = con.id where cou.id = ${id}`;
+      const sql = `SELECT cou.name as country_name, con.name as continent_name FROM countries as cou JOIN continent as con ON cou.continent_id = con.id WHERE cou.id = ${id}`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
@@ -208,7 +222,7 @@ export class MysqlService {
 
    // 유저가 선택한 키워드 업데이트 하는 함수
    async updateUserKeyword(email: string, keyword: number) {
-      const sql = `INSERT INTO user_keyword values("${email}", ${keyword})`;
+      const sql = `INSERT INTO user_keyword VALUES("${email}", ${keyword})`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
@@ -222,7 +236,7 @@ export class MysqlService {
 
    // 유저가 검색한 내용을 가진 여행지 id를 조회하는 함수
    async findDestinationBySearch(search: string) {
-      const sql = `SELECT id FROM destination WHERE name LIKE "%${search}%" or address LIKE "%${search}%"`;
+      const sql = `SELECT id FROM destination WHERE name LIKE "%${search}%" OR address LIKE "%${search}%"`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
@@ -248,16 +262,30 @@ export class MysqlService {
       return rows;
    }
 
+   // 예약 id로 예약한 여행지 조회
+   async findResevationById(id: string) {
+      const sql = `SELECT user_email, destination_id, DATE_FORMAT(date, "%m월 %d일 %H:%i") as format_date, SUBSTR(_UTF8'일월화수목금토', DAYOFWEEK(date), 1) as day, status FROM reservation WHERE id = "${id}"`;
+      const [rows] = await this.pool.execute(sql);
+      return rows;
+   }
+
    // 리뷰 생성하는 함수
-   async createReview(id: string, email: string, destinationId: number, rating: number, content: string) {
-      const sql = `INSERT INTO review VALUES("${id}", "${email}", ${destinationId}, ${rating}, "${content}")`;
+   async createReview(
+      id: string,
+      email: string,
+      destinationId: number,
+      rating: number,
+      content: string,
+      reservationId: string,
+   ) {
+      const sql = `INSERT INTO review VALUES("${id}", "${email}", ${destinationId}, ${rating}, "${content}", "${reservationId}")`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
 
    // 예약한 여행지 방문했을 경우 status 업데이트 하는 함수
-   async updateReservation(email: string, destinationId: number) {
-      const sql = `UPDATE reservation SET status = 1 WHERE id = "${email}" and destination_id = ${destinationId}`;
+   async updateReservation(id: string) {
+      const sql = `UPDATE reservation SET status = 1 WHERE id = "${id}"`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
