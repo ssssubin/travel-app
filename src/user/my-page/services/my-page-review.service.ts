@@ -1,24 +1,28 @@
-import {
-   BadRequestException,
-   ForbiddenException,
-   Injectable,
-   InternalServerErrorException,
-   NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { Response } from "express";
 import { MysqlService } from "@data/mysql/mysql.service";
 import { createReviewDto } from "@mypage/dto/create-review.dto";
 import { v4 as uuidv4 } from "uuid";
 import { MysqlCreateTableService } from "@data/mysql/mysql-create-table.service";
-import * as fs from "fs";
 import * as path from "path";
+import * as AWS from "aws-sdk";
 
 @Injectable()
 export class ReviewService {
+   private readonly awsS3: AWS.S3;
+   public readonly S3_BUCKET_NAME: string;
+
    constructor(
       private mysqlService: MysqlService,
       private mysqlCreateService: MysqlCreateTableService,
-   ) {}
+   ) {
+      this.awsS3 = new AWS.S3({
+         accessKeyId: process.env.AWS_S3_ACCESS_KEY,
+         secretAccessKey: process.env.AWS_S3_SECRET_KEY,
+         region: process.env.AWS_S3_REGION,
+      });
+      this.S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME;
+   }
 
    // 유효성 검증한 후, 여행지 id 반환하는 함수
    async validateData(email: string, name: string, date: string): Promise<number> {
@@ -54,57 +58,35 @@ export class ReviewService {
       }
    }
 
-   // 이미지 서버에 업로드하는 함수
-   async uploadImage(images: Express.Multer.File | null) {
-      if (!images) return null;
-
-      const uploadPath = "./uploads/reviewImages"; // 실제 저장할 디렉토리
-      const tempPath = "./uploads/temp"; // 임시 저장된 디렉토리
-      if (Array.isArray(images)) {
-         await Promise.all(
-            images.map(async (image) => {
-               // 임시로 파일 저장하는 경로
-               const tempfilePath = path.join(tempPath, image.filename);
-               // 실제 파일 저장할 경로
-               const destPath = path.join(uploadPath, image.filename);
-               try {
-                  // 파일 이동
-                  await fs.promises.rename(tempfilePath, destPath);
-               } catch (e) {
-                  throw new InternalServerErrorException("파일 업로드 시 오류발생");
-               } finally {
-                  // 임시 폴더에 저장된 파일들 읽음
-                  const files = await fs.promises.readdir(tempPath);
-                  if (files.length === 0) return;
-                  await Promise.all(
-                     files.map(async (file) => {
-                        // 임시 폴더에 저장되어있는 모든 파일 삭제
-                        const tempFilePath = path.join(tempPath, file);
-                        await fs.promises.unlink(tempFilePath);
-                     }),
-                  );
-               }
-            }),
-         );
+   // 이미지 S3에 업로드 하는 함수
+   async uploadImage(email: string, images: Express.Multer.File[]) {
+      if (images.length === 0) return [null];
+      const result: string[] = [];
+      // replace(/ /g, "") -> 모든 공백 지움
+      for (const image of images) {
+         const key = `${email}/review/${Date.now()}_${path.basename(image.originalname)}`.replace(/ /g, "");
+         result.push(key);
+         await this.awsS3
+            .putObject({
+               Bucket: this.S3_BUCKET_NAME,
+               Key: key,
+               Body: image.buffer,
+               ACL: "public-read",
+               ContentType: image.mimetype,
+            })
+            .promise();
       }
+
+      return result;
    }
 
    // 리뷰 생성 API(예약한 곳에 대해서만)
-   async createReview(res: Response, reviewData: createReviewDto, images: Express.Multer.File | null) {
+   async createReview(res: Response, reviewData: createReviewDto, images: Express.Multer.File[]) {
       const connection = await this.mysqlCreateService.getConnection();
       try {
          // 유저 이메일
          const { email } = res.locals.user;
          const { name, date, rating, review } = reviewData;
-
-         // 이미지 담는 배열 생성
-         const image = [];
-
-         if (Array.isArray(images)) {
-            // 이미지가 안 들어왔을 경우, null push
-            if (images.length === 0) image.push(null);
-            images.map((item) => image.push(item.filename));
-         }
 
          // 리뷰 id 생성
          const reviewId = uuidv4();
@@ -121,15 +103,15 @@ export class ReviewService {
          // 리뷰 데이터 저장
          await this.mysqlService.createReview(reviewId, email, destinationId, rating, review);
 
+         // 이미지 업로드
+         const imagePathList = await this.uploadImage(email, images);
+
          // 리뷰 - 이미지 데이터 저장
          await Promise.all(
-            image.map(async (value) => {
-               await this.mysqlService.registerReviewImage(reviewId, value);
+            imagePathList.map(async (image) => {
+               await this.mysqlService.registerReviewImage(reviewId, image);
             }),
          );
-
-         // 이미지 업로드
-         await this.uploadImage(images);
 
          // 트랜잭션 커밋
          await connection.commit();
@@ -178,47 +160,33 @@ export class ReviewService {
       }
    }
 
-   // 기존 이미지 제거하는 함수
-   async removeImage(reviewId: string) {
-      // 리뷰 id로 리뷰 이미지 조회
-      const foundReview = await this.mysqlService.findReviewImageByReviewId(reviewId);
-
-      // 등록된 리뷰 이미지가 없는 경우
-      if (foundReview[0] === undefined || foundReview[0].image === "null") return null;
-
-      if (Array.isArray(foundReview)) {
-         // 리뷰 이미지가 저장되어있는 디렉토리 경로
-         const reviewImageDirPath = "./uploads/reviewImages/";
-         try {
-            await Promise.all(
-               foundReview.map(async (image) => {
-                  // 이미지 파일이 저장된 경로
-                  const reviewImageFilePath = path.join(reviewImageDirPath, image.image);
-                  // 이미지 파일 제거
-                  await fs.promises.unlink(reviewImageFilePath);
-               }),
-            );
-         } catch (e) {
-            throw e;
-         }
+   // AWS S3에 저장된 이미지 삭제하는 함수
+   async removeImage(id: string, callback?: (err: AWS.AWSError, data: AWS.S3.DeleteObjectOutput) => void) {
+      const foundReviewImage = await this.mysqlService.findReviewImageByReviewId(id);
+      if (Array.isArray(foundReviewImage)) {
+         foundReviewImage
+            .map((image) => image.image)
+            .forEach(async (imagePath) => {
+               await this.awsS3
+                  .deleteObject(
+                     {
+                        Bucket: this.S3_BUCKET_NAME,
+                        Key: imagePath,
+                     },
+                     callback,
+                  )
+                  .promise();
+            });
       }
    }
 
    // 리뷰 수정 API
-   async updateReview(res: Response, images: Express.Multer.File | null, id: string, data: createReviewDto) {
+   async updateReview(res: Response, images: Express.Multer.File[], id: string, data: createReviewDto) {
       const connection = await this.mysqlCreateService.getConnection();
       try {
          // 유저 이메일
          const { email } = res.locals.user;
          const { date, rating, review } = data;
-         // 이미지 담는 배열 생성
-         const image = [];
-
-         if (Array.isArray(images)) {
-            // 이미지가 안 들어왔을 경우, null push
-            if (images.length === 0) image.push(null);
-            images.map((item) => image.push(item.filename));
-         }
 
          // 작성된 리뷰가 없는 경우
          const foundReview = await this.mysqlService.isReviewByReviewId(id);
@@ -233,22 +201,19 @@ export class ReviewService {
          // 유효성 검증
          await this.validateUpdateData(email, date, id);
 
-         // 기존 이미지 제거(from 서버)
-         const removeImage = await this.removeImage(id);
+         // 기존 이미지 제거(from S3)
+         await this.removeImage(id);
 
-         // 등록된 리뷰 이미지가 있는 경우
-         if (removeImage !== null) {
-            // 기존 이미지 제거(from DB)
-            await this.mysqlService.deleteReviewImageByReviewId(id);
-         }
+         // 기존 이미지 제거(from DB)
+         await this.mysqlService.deleteReviewImageByReviewId(id);
 
          // 이미지 업로드
-         await this.uploadImage(images);
+         const imagePathList = await this.uploadImage(email, images);
 
          // 리뷰 - 이미지 데이터 저장
          await Promise.all(
-            image.map(async (value) => {
-               await this.mysqlService.registerReviewImage(id, value);
+            imagePathList.map(async (image) => {
+               await this.mysqlService.registerReviewImage(id, image);
             }),
          );
 
@@ -289,7 +254,7 @@ export class ReviewService {
          if (foundReview[0].user_email !== email) {
             throw new ForbiddenException("삭제 권한이 없습니다.");
          }
-         // 리뷰 - 이미지 삭제(in Server)
+         // 리뷰 - 이미지 삭제(in S3)
          await this.removeImage(id);
          // 트랜잭션 시작
          await connection.beginTransaction();
