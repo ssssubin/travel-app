@@ -24,8 +24,8 @@ export class ReviewService {
       this.S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME;
    }
 
-   // 유효성 검증한 후, 여행지 id 반환하는 함수
-   async validateData(email: string, name: string, date: string): Promise<number> {
+   // 유효성 검증한 후, 예약 id & 예약한 여행지 id 반환하는 함수
+   async validateData(email: string, name: string, date: string) {
       // 리뷰 작성하려는 여행지 id 조회
       const foundDestination = await this.mysqlService.findDestinationByName(name);
 
@@ -41,20 +41,23 @@ export class ReviewService {
          const destinationId = foundReservationDestination.map((value) => {
             const destinationDate = `${value.format_date} ${value.day}`.split(" ");
             return {
-               id: value.destination_id,
+               id: value.id,
+               destination_id: value.destination_id,
                date: `${destinationDate[0]} ${destinationDate[1]}(${destinationDate[3]})`,
             };
          });
 
          // 예약 날짜와 방문 날짜가 일치하는지 확인
-         const isVisited = destinationId.filter((id) => id.id === foundDestination[0].id && id.date === date);
+         const isVisited = destinationId.filter(
+            (id) => id.destination_id === foundDestination[0].id && id.date === date,
+         );
 
          // 예약 날짜와 방문 날짜가 일치하지 않는 경우
          if (isVisited.length === 0) {
             throw new BadRequestException("방문하지 않은 여행지에 대해서는 리뷰를 작성할 수 없습니다.");
          }
 
-         return foundDestination[0].id;
+         return { reservationId: isVisited[0].id, destinationId: isVisited[0].destination_id };
       }
    }
 
@@ -80,6 +83,54 @@ export class ReviewService {
       return result;
    }
 
+   // 리뷰 조회하는 함수
+   async getReview(res: Response) {
+      try {
+         const { email } = res.locals.user;
+         // 유저가 작성한 리뷰 리스트(리뷰 id, 여행지 id, 별점, 리뷰내용, 예약 id)
+         const foundReview = await this.mysqlService.findReviewByUserEmail(email);
+         // 리뷰를 작성한 여행지 id 리스트
+         const reviewList = Array.isArray(foundReview) ? foundReview.map((review) => review) : [];
+         // 여행지명 리스트
+         const destinationList = await Promise.all(
+            reviewList.map(async (review) => {
+               const destination = await this.mysqlService.findDestinationById(review.destination_id);
+               return destination[0].name;
+            }),
+         );
+
+         // 리뷰 리스트(방문날짜, 평점, 리뷰 내용)
+         const foundReservation = await Promise.all(
+            reviewList.map(async (review) => {
+               // 예약 id로 방문 날짜 조회
+               const foundDate = await this.mysqlService.findResevationById(review.reservation_id);
+               const visitedDate = `${foundDate[0].format_date} ${foundDate[0].day}`.split(" ");
+
+               return {
+                  date: `${visitedDate[0]} ${visitedDate[1]}(${visitedDate[3]}) ${visitedDate[2]}`,
+                  rating: review.rating,
+                  content: review.content,
+               };
+            }),
+         );
+
+         // 응답 데이터 : 작성 리뷰의 여행지명, 방문 날짜, 평점, 리뷰 내용
+         const payload: { name: string; visitedDate: string; rating: number; review: string }[] = destinationList.map(
+            (name, index) => {
+               return {
+                  name,
+                  visitedDate: foundReservation[index].date,
+                  rating: foundReservation[index].rating,
+                  review: foundReservation[index].content,
+               };
+            },
+         );
+         return payload;
+      } catch (e) {
+         throw e;
+      }
+   }
+
    // 리뷰 생성 API(예약한 곳에 대해서만)
    async createReview(res: Response, reviewData: createReviewDto, images: Express.Multer.File[]) {
       const connection = await this.mysqlCreateService.getConnection();
@@ -94,14 +145,14 @@ export class ReviewService {
          // 트랜잭션 시작
          await connection.beginTransaction();
 
-         // 여행지 id
-         const destinationId = await this.validateData(email, name, date);
+         // 예약 id, 예약한 여행지 id
+         const { reservationId, destinationId } = await this.validateData(email, name, date);
 
          // 방문한 여행지로 수정(status = 0 -> 1)
-         await this.mysqlService.updateReservation(email, destinationId);
+         await this.mysqlService.updateReservation(reservationId);
 
          // 리뷰 데이터 저장
-         await this.mysqlService.createReview(reviewId, email, destinationId, rating, review);
+         await this.mysqlService.createReview(reviewId, email, destinationId, rating, review, reservationId);
 
          // 이미지 업로드
          const imagePathList = await this.uploadImage(email, images);
