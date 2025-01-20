@@ -4,12 +4,14 @@ import { MysqlService } from "@data/mysql/mysql.service";
 import { MainService } from "@main/main.service";
 import { updateUserDto } from "@user/dto/update-user.dto";
 import * as bcrypt from "bcrypt";
+import { ReviewService } from "./my-page-review.service";
 
 @Injectable()
 export class MyPageService {
    constructor(
       private mysqlService: MysqlService,
       private mainService: MainService,
+      private reviewService: ReviewService,
    ) {}
 
    // 마이페이지 조회 API
@@ -20,39 +22,13 @@ export class MyPageService {
          // 마이페이지 조회하려는 유저 이메일
          const { email } = res.locals.user;
 
-         // 유저가 방문한 여행지 리스트
-         const foundVisitedDestination = await this.mysqlService.findVisitedDestinationByUserEmail(email);
-         // 여행지 id 리스트
-         const destinationIdList = Array.isArray(foundVisitedDestination)
-            ? foundVisitedDestination.map((destination) => destination.destination_id)
-            : [];
-         // 유저가 방문한 여행지 리스트
-         const destinationList = await Promise.all(
-            destinationIdList.map(async (id) => {
-               const destination = await this.mysqlService.findDestinationById(id);
-               return destination[0].name;
-            }),
-         );
+         // 유저가 방문한 여행지 수
+         const visitedDestination = await this.mysqlService.countVisitedDestinationByUserEmail(email);
 
-         // 유저가 방문한 여행지별 대표 이미지
-         const mainImage = await this.mainService.mainImageByDestination(destinationIdList);
-         // 유저가 방문한 여행지별 평점
-         const rating = await this.mainService.ratingByDestination(destinationIdList);
-         // response 데이터 배열(여행지 이름, 예약 날짜 및 시간, 별점, 유저가 작성한 리뷰)
-         const payload: { image: string; name: string; date: string; rating: number; review: string | null }[] = [];
+         // 유저가 작성 리뷰
+         const foundReview = await this.reviewService.getReview(res);
 
-         // 유저가 방문한 여행지 id 리스트 길이만큼 반복문 실행
-         for (let i = 0; i < destinationIdList.length; i++) {
-            const formatDate = foundVisitedDestination[i].format_date.split(" ");
-            payload.push({
-               image: mainImage[i],
-               date: `${formatDate[0]} ${formatDate[1]}(${foundVisitedDestination[i].day})`,
-               name: destinationList[i],
-               rating: rating[i],
-               review: foundVisitedDestination[i].content,
-            });
-         }
-         return { err: null, data: { review: payload, reservation: foundReservation } };
+         return { err: null, data: { visitedDestination, review: foundReview, reservation: foundReservation } };
       } catch (e) {
          throw e;
       }
@@ -161,14 +137,14 @@ export class MyPageService {
             }),
          );
 
-         // 유저가 선택한 기존 키워드 삭제
-         await this.mysqlService.deleteUserKeyword(email);
-         await Promise.all(
+         await Promise.all([
+            // 유저가 선택한 기존 키워드 삭제
+            this.mysqlService.deleteUserKeyword(email),
             keywordIdList.map(async (id) => {
                // 유저가 변경한 키워드로 업데이트
                await this.mysqlService.updateUserKeyword(email, id);
             }),
-         );
+         ]);
 
          return { err: null, data: "키워드가 수정되었습니다." };
       } catch (e) {
