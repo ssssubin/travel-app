@@ -187,7 +187,7 @@ export class MysqlService {
 
    // 유저 이메일로 방문한 여행지 수 조회하는 함수
    async countVisitedDestinationByUserEmail(email: string) {
-      const sql = `SELECT COUNT(destination_id) as count FROM reservation WHERE id = "${email}" AND status = 1`;
+      const sql = `SELECT COUNT(destination_id) as count FROM reservation WHERE user_email = "${email}" AND status = 1`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
