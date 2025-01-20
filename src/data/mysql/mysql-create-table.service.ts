@@ -68,8 +68,7 @@ export class MysqlCreateTableService {
        image VARCHAR(200) DEFAULT NULL,
        password VARCHAR(100) NOT NULL,
        is_user TINYINT(1) DEFAULT 1,
-       withdrawal_date date DEFAULT NULL,
-       FOREIGN KEY (city_id) REFERENCES cities (id)
+       withdrawal_date date DEFAULT NULL
     )`;
       const [rows] = await this.pool.execute(sql);
       return rows;
@@ -160,12 +159,13 @@ export class MysqlCreateTableService {
    // 예약 테이블 생성하는 함수
    async createReservationTable() {
       const sql = `CREATE TABLE IF NOT EXISTS reservation(
-         id VARCHAR(150) NOT NULL,
+         id VARCHAR(40) NOT NULL PRIMARY KEY,
+         user_email VARCHAR(150) NOT NULL,
          destination_id INT NOT NULL,
          date DATETIME NOT NULL,
          reservation_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
          status TINYINT(1) DEFAULT 0,
-         FOREIGN KEY (id) REFERENCES users (email) ON DELETE CASCADE ON UPDATE CASCADE,
+         FOREIGN KEY (user_email) REFERENCES users (email) ON DELETE CASCADE ON UPDATE CASCADE,
          FOREIGN KEY (destination_id) REFERENCES destination (id) ON DELETE CASCADE
       )`;
       const [rows] = await this.pool.execute(sql);
@@ -180,9 +180,11 @@ export class MysqlCreateTableService {
          destination_id INT NOT NULL,
          rating DECIMAL(3,2) NOT NULL,
          content VARCHAR(300),
+         reservation_id VARCHAR(40) NOT NULL,
          FOREIGN KEY (user_email) REFERENCES users (email) ON DELETE CASCADE ON UPDATE CASCADE,
-         FOREIGN KEY (destination_id) REFERENCES destination (id) ON DELETE CASCADE
-      )`;
+         FOREIGN KEY (destination_id) REFERENCES destination (id) ON DELETE CASCADE,
+         FOREIGN KEY (reservation_id) REFERENCES reservation (id) ON DELETE CASCADE ON UPDATE CASCADE
+         )`;
       const [rows] = await this.pool.execute(sql);
       return rows;
    }
