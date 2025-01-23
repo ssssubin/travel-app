@@ -28,7 +28,14 @@ export class MyPageService {
          // 유저가 작성 리뷰
          const foundReview = await this.reviewService.getReview(res);
 
-         return { err: null, data: { visitedDestination, review: foundReview, reservation: foundReservation } };
+         return {
+            err: null,
+            data: {
+               visitedDestination: visitedDestination[0].count,
+               review: foundReview,
+               reservation: foundReservation,
+            },
+         };
       } catch (e) {
          throw e;
       }
